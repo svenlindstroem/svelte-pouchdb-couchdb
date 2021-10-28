@@ -1,3 +1,8 @@
+// css
+import "../node_modules/materialize-css/dist/css/materialize.css";
+// js
+import "../node_modules/materialize-css/dist/js/materialize";
+
 import App from "./App.svelte";
 
 if ("serviceWorker" in navigator) {
@@ -20,5 +25,8 @@ if ("serviceWorker" in navigator) {
 const app = new App({
   target: document.body,
 });
+
+// initialize all Materialize plugins
+M.AutoInit();
 
 export default app;
