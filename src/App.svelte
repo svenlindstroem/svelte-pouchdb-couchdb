@@ -1,6 +1,7 @@
 <script>
   import { onMount } from "svelte";
 
+  import ModalListAdd from "./components/ModalListAdd.svelte";
   const localDbName = "shopping";
   const localDb = new PouchDB(localDbName);
 
@@ -66,6 +67,7 @@
     console.log("goto");
   }
 
+  /*
   function addList() {
     const list = {
       _id: "list:" + new Date().toISOString(),
@@ -91,7 +93,7 @@
         document.querySelector("#modal-list-add .modal-close").click();
       }
     });
-  }
+  }*/
 </script>
 
 <!-- banner -->
@@ -120,7 +122,7 @@
       ... loading
     {:then lists}
       {#each lists as list}
-        <div id="list-2021-10-25T11-53-50-689Z" class="card collapsible">
+        <div class="card collapsible">
           <div class="list-view collapsible">
             <div class="card-content" on:click={goto}>
               <span class="card-title activator"
@@ -234,55 +236,13 @@
     </div>
   </form>
 </div>
+<!-- test modal -->
 
 <!-- modal: add a shopping list form -->
-<div id="modal-list-add" class="modal bottom-sheet list-bottom-sheet">
-  <form
-    id="shopping-list-add"
-    class="col s12 white"
-    on:submit|preventDefault={addList}
-  >
-    <div class="modal-content">
-      <h5>Create a Shopping List</h5>
-      <div class="row">
-        <div class="input-field col s12">
-          <input
-            name="title"
-            type="text"
-            class="validate"
-            bind:value={listName}
-            placeholder="Enter a title for the shopping list"
-            required
-          />
-        </div>
-        <input name="type" type="hidden" value="list" />
-      </div>
-    </div>
-    <div class="modal-footer primary-color">
-      <button class="btn-flat modal-close" type="button">Cancel</button>
-      <button class="btn-flat" type="submit">Add</button>
-    </div>
-  </form>
-</div>
+<ModalListAdd {localDb} />
 
 <style>
   main {
-    text-align: center;
-    padding: 1em;
-    max-width: 240px;
-    margin: 0 auto;
-  }
-
-  h1 {
-    color: #ff3e00;
-    text-transform: uppercase;
-    font-size: 4em;
-    font-weight: 100;
-  }
-
-  @media (min-width: 640px) {
-    main {
-      max-width: none;
-    }
+    display: flex;
   }
 </style>
