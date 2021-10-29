@@ -1,13 +1,12 @@
 <script>
   import { onMount } from "svelte";
 
+  import ModalSettings from "./components/ModalSettings.svelte";
   import ModalListAdd from "./components/ModalListAdd.svelte";
   const localDbName = "shopping";
   const localDb = new PouchDB(localDbName);
 
-  let remoteUrl,
-    listName,
-    lists = [];
+  let lists = [];
 
   function getLists() {
     localDb.find(
@@ -29,71 +28,9 @@
   function removeList() {}
   function updateList() {}
 
-  async function getSettings(id) {
-    try {
-      const result = await localDb.get("_local/user");
-      return result;
-    } catch (error) {
-      return error;
-    }
-  }
-
-  async function saveSettings() {
-    const _id = "_local/user";
-
-    const settings = {
-      _id: _id,
-      remoteDB: remoteUrl, // bound variable
-    };
-
-    // get the previous aved setting if any
-    const doc = await getSettings();
-    if (doc && doc._rev) {
-      // for an update operation a _rev is required
-      settings._rev = doc._rev;
-    }
-
-    localDb.put(settings, function (error, response) {
-      console.log("save settings", error, response);
-      if (error) {
-        console.error("Error saving these settings:", settings);
-      } else {
-        document.querySelector("#modal-settings .modal-close").click();
-      }
-    });
-  }
-
   function goto() {
     console.log("goto");
   }
-
-  /*
-  function addList() {
-    const list = {
-      _id: "list:" + new Date().toISOString(),
-      type: "list",
-      version: 1,
-      title: listName,
-      checked: false,
-      place: {
-        title: "",
-        license: "",
-        lat: null,
-        lon: null,
-        address: {},
-      },
-      createdAt: new Date().toISOString(),
-      updatedAt: "",
-    };
-
-    localDb.put(list, function (error, result) {
-      console.log(error, result);
-      if (!error) {
-        listName = "";
-        document.querySelector("#modal-list-add .modal-close").click();
-      }
-    });
-  }*/
 </script>
 
 <!-- banner -->
@@ -204,39 +141,7 @@
 </main>
 
 <!-- modal: add a shopping list settings form -->
-<div id="modal-settings" class="modal top-sheet settings-top-sheet">
-  <form
-    id="shopping-list-settings"
-    class="col s12 white"
-    on:submit|preventDefault={saveSettings}
-  >
-    <div class="modal-content">
-      <h5>Shopping Lists Settings</h5>
-      <div class="row">
-        <div class="input-field col s12">
-          <span class="primary-text darker"
-            >Enter a fully qualified URL (including username and password) to a
-            remote IBM Cloudant, Apache CouchDB, or PouchDB database to sync
-            your shopping list.</span
-          >
-          <input
-            name="remoteDB"
-            type="url"
-            class="validate"
-            placeholder="http://username:password@localhost:5984/database"
-            bind:value={remoteUrl}
-          />
-          <div class="chip" />
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer secondary-color">
-      <button class="btn-flat modal-close" type="button">Cancel</button>
-      <button class="btn-flat" type="submit">Sync</button>
-    </div>
-  </form>
-</div>
-<!-- test modal -->
+<ModalSettings {localDb} />
 
 <!-- modal: add a shopping list form -->
 <ModalListAdd {localDb} />
