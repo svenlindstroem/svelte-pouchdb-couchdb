@@ -3,8 +3,11 @@
 
   import ModalSettings from "./components/ModalSettings.svelte";
   import ModalListAdd from "./components/ModalListAdd.svelte";
+  import List from "./components/List.svelte";
   const localDbName = "shopping";
   const localDb = new PouchDB(localDbName);
+
+  let view = "lists";
 
   let lists = [];
 
@@ -23,10 +26,6 @@
   }
 
   getLists();
-
-  function toggleList() {}
-  function removeList() {}
-  function updateList() {}
 
   function goto() {
     console.log("goto");
@@ -59,76 +58,16 @@
       ... loading
     {:then lists}
       {#each lists as list}
-        <div class="card collapsible">
-          <div class="list-view collapsible">
-            <div class="card-content" on:click={goto}>
-              <span class="card-title activator"
-                >{list.title}
-                <button class="btn-flat more-btn right" on:click={toggleList}
-                  ><i class="material-icons">more_vert</i></button
-                >
-              </span>
-            </div>
-            <div class="card-action">
-              <input
-                type="checkbox"
-                id="checked-list-list-2021-10-25T11-53-50-689Z"
-                name="checked-list-list-2021-10-25T11-53-50-689Z"
-                disabled=""
-              />
-              <label for="checked-list-list-2021-10-25T11-53-50-689Z"
-                >0 of 2 items checked</label
-              >
-            </div>
-          </div>
-          <div class="list-edit collapsible closed">
-            <form
-              id="form-list-2021-10-25T11-53-50-689Z"
-              class="col s12 white"
-              on:submit|preventDefault={updateList}
-            >
-              <div class="card-content">
-                <span class="card-title">
-                  <button
-                    id="close-list-2021-10-25T11-53-50-689Z"
-                    type="button"
-                    class="btn-flat more-btn right"
-                    on:click|preventDefault={toggleList}
-                    ><i class="material-icons">close</i></button
-                  >
-                </span>
-                <h5>Edit Shopping List</h5>
-                <div class="row">
-                  <div class="input-field col s12">
-                    <input
-                      name="title"
-                      type="text"
-                      class="validate"
-                      value={list.title}
-                      placeholder="Supermarket"
-                      required=""
-                    />
-                  </div>
-                </div>
-              </div>
-              <div class="card-action">
-                <button
-                  class="btn-flat"
-                  type="button"
-                  on:click|preventDefault={removeList}>Remove</button
-                >
-                <button class="btn-flat" type="submit">Update</button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <List {list} {localDb} />
       {/each}
     {/await}
   </div>
 
-  <ul id="shopping-list-items" class="collection">
-    <!-- shopping list items get inserted here -->
-  </ul>
+  {#if view === "items"}
+    <ul id="shopping-list-items" class="collection">
+      <!-- shopping list items get inserted here -->
+    </ul>
+  {/if}
 
   <!-- add more stuff button -->
   <button
@@ -147,7 +86,4 @@
 <ModalListAdd {localDb} />
 
 <style>
-  main {
-    display: flex;
-  }
 </style>
