@@ -125,10 +125,11 @@ nav .nav-wrapper {
 }
 
 main {
+  /* changed to important */
   display: flex !important;
   margin: 0 auto 75px auto;
+  /* removed */
   /*width: 200vw;*/
-  /* width: 100vw; */
 }
 
 main #add-button {
