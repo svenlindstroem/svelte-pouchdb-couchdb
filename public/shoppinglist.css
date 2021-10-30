@@ -8,12 +8,116 @@ body * {
   box-shadow: none !important;
 }
 
+body[data-list-id] {
+  background-color: #ffffff !important;
+}
+
+h5 {
+  font-weight: 300;
+}
+
+.btn-flat {
+  color: #7f91a9;
+}
+.btn-flat:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+[type="checkbox"]:checked + label::before {
+  border-right-color: #52647a;
+  border-bottom-color: #52647a;
+}
+
 .primary-color {
   background-color: #52647a !important;
 }
-
 .primary-color * {
   color: #ffffff !important;
+}
+.primary-color.lighter {
+  background-color: #7f91a9 !important;
+}
+.primary-color.darker {
+  background-color: #273a4e !important;
+}
+
+.secondary-color {
+  background-color: #ff6ca1 !important;
+}
+.secondary-color * {
+  color: #000000 !important;
+}
+.secondary-color.ligher {
+  background-color: #ff9fd2 !important;
+}
+.secondary-color.darker,
+button.secondary-color:focus,
+button.secondary-color:hover {
+  background-color: #c83873 !important;
+}
+
+.tertiary-color {
+  background-color: #e1e2e1 !important;
+}
+.tertiary-color-lighter {
+  background-color: #f5f5f6 !important;
+}
+
+.primary-text {
+  color: #52647a;
+}
+.primary-text.lighter {
+  color: #7f91a9;
+}
+.primary-text.darker {
+  color: #273a4e;
+}
+
+.secondary-text {
+  color: #ff6ca1;
+}
+.secondary-text.lighter {
+  color: #ff9fd2 !important;
+}
+.secondary-text.darker {
+  color: #c83873;
+}
+
+.tertiary-text {
+  color: #e1e2e1;
+}
+.tertiary-text-lighter {
+  color: #f5f5f6;
+}
+
+body.shopping-list-offline .primary-color,
+body.shopping-list-offline .secondary-color {
+  background-color: #273a4e !important;
+}
+body.shopping-list-offline .primary-color *,
+body.shopping-list-offline .secondary-color * {
+  color: #e1e2e1 !important;
+}
+
+.item-edit form,
+.list-edit form {
+  margin: 15px;
+}
+
+.collapsible {
+  border: 0 none !important;
+}
+
+input:focus:not([disabled]):not([readonly]) {
+  border-bottom-color: #52647a !important;
+}
+
+.goback {
+  visibility: hidden;
+}
+
+body[data-list-id] .goback {
+  visibility: initial;
 }
 
 nav .nav-wrapper {
@@ -21,9 +125,20 @@ nav .nav-wrapper {
 }
 
 main {
-  display: flex;
+  display: flex !important;
   margin: 0 auto 75px auto;
-  width: 200vw;
+  /*width: 200vw;*/
+  /* width: 100vw; */
+}
+
+main #add-button {
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+}
+
+main .card {
+  margin: 30px;
 }
 
 #shopping-lists,
@@ -42,78 +157,6 @@ main {
   vertical-align: top;
 }
 
-main #add-button {
-  position: fixed;
-  bottom: 25px;
-  right: 25px;
-}
-
-main .card {
-  margin: 30px;
-}
-
-.secondary-color {
-  background-color: #ff6ca1 !important;
-}
-
-.secondary-color * {
-  color: #000000 !important;
-}
-
-h5 {
-  font-weight: 300;
-}
-
-.btn-flat {
-  color: #7f91a9;
-}
-
-.btn-flat:hover {
-  background-color: rgba(0, 0, 0, 0.1);
-}
-
-input:focus:not([disabled]):not([readonly]) {
-  border-bottom-color: #52647a !important;
-}
-
-body.shopping-list-add .list-bottom-sheet,
-body.shopping-list-item-add .item-bottom-sheet {
-  z-index: 1007;
-  display: block;
-  bottom: 0px;
-  opacity: 1;
-  transition-property: bottom;
-  transition-duration: 0.75s;
-}
-
-body.shopping-list-add .modal-overlay,
-body.shopping-list-item-add .modal-overlay,
-body.shopping-list-settings .modal-overlay {
-  display: block;
-  opacity: 0.5;
-  transition-property: all;
-  transition-duration: 0.25s;
-  z-index: 1006;
-}
-
-.collapsible {
-  overflow-y: hidden;
-  margin: 0;
-  max-height: calc(100vh - 65px);
-  transition-property: all;
-  transition-duration: 0.55s;
-}
-
-.collapsible.closed {
-  max-height: 0;
-  transition-property: all;
-  transition-duration: 0.15s;
-}
-
-.card.collapsible {
-  transition-duration: 2s;
-}
-
 .list-edit .card-action,
 .item-edit .card-action {
   border: 0 none;
@@ -121,9 +164,8 @@ body.shopping-list-settings .modal-overlay {
   text-align: right;
 }
 
-.item-edit form,
-.list-edit form {
-  margin: 15px;
+#shopping-lists .card-content {
+  cursor: pointer;
 }
 
 #shopping-list-items .card,
@@ -156,8 +198,43 @@ body.shopping-list-settings .modal-overlay {
   color: #212121;
 }
 
-body[data-list-id] {
-  background-color: #ffffff !important;
+.collapsible {
+  overflow-y: hidden;
+  margin: 0;
+  max-height: calc(100vh - 65px);
+  transition-property: all;
+  transition-duration: 0.55s;
+}
+
+.collapsible.closed {
+  max-height: 0;
+  transition-property: all;
+  transition-duration: 0.15s;
+}
+
+.card.collapsible {
+  transition-duration: 2s;
+}
+
+body.shopping-list-add .list-bottom-sheet,
+body.shopping-list-item-add .item-bottom-sheet {
+  z-index: 1007;
+  display: block;
+  bottom: 0px;
+  opacity: 1;
+  transition-property: bottom;
+  transition-duration: 0.75s;
+}
+
+body.shopping-list-add .modal-overlay,
+body.shopping-list-item-add .modal-overlay,
+body.shopping-list-settings .modal-overlay,
+body.shopping-list-about .modal-overlay {
+  display: block;
+  opacity: 0.5;
+  transition-property: all;
+  transition-duration: 0.25s;
+  z-index: 1006;
 }
 
 body[data-list-id] #shopping-lists,
@@ -165,16 +242,12 @@ body[data-list-id] #shopping-list-items {
   transform: translate(-100vw);
 }
 
-.goback {
-  visibility: hidden;
-}
-
-body[data-list-id] .goback {
-  visibility: initial;
-}
-
 [type="checkbox"]:disabled:not(:checked) + label::before {
   display: none;
+}
+
+.more-btn {
+  padding: 2px 15px;
 }
 
 .modal.top-sheet {
@@ -186,7 +259,8 @@ body[data-list-id] .goback {
   will-change: bottom, opacity;
 }
 
-body.shopping-list-settings .settings-top-sheet {
+body.shopping-list-settings .settings-top-sheet,
+body.shopping-list-about .about-top-sheet {
   z-index: 1007;
   display: block;
   top: 0px;
@@ -211,6 +285,16 @@ body.shopping-list-settings .settings-top-sheet {
 #shopping-list-settings .chip {
   display: none;
   font-weight: 300;
+}
+
+body.shopping-list-error-sync nav a.settings.settings-btn,
+body:not(.shopping-list-error-sync) nav a.settings.error-btn {
+  display: none;
+}
+
+body:not(.shopping-list-error-sync) nav a.settings.settings-btn,
+body.shopping-list-error-sync nav a.settings.error-btn {
+  display: initial;
 }
 
 .shopping-list-error-sync #shopping-list-settings .chip {
