@@ -1,4 +1,6 @@
 <script>
+  import { listId } from "../store.js";
+
   export let list;
   export let localDb;
 
@@ -13,7 +15,10 @@
     viewState = viewState === "closed" ? "open" : "closed";
   }
 
-  function openList() {}
+  // set the listId
+  function openList() {
+    listId.update(() => list._id);
+  }
 
   async function remove() {
     if (viewState === "open") return;
@@ -43,7 +48,9 @@
     <div class="card-content" on:click={openList}>
       <span class="card-title activator"
         >{list.title}
-        <button class="btn-flat more-btn right" on:click={toggle}
+        <button
+          class="btn-flat more-btn right"
+          on:click|stopPropagation={toggle}
           ><i class="material-icons">more_vert</i></button
         >
       </span>
