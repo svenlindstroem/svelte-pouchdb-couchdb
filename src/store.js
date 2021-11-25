@@ -1,3 +1,3 @@
 import { writable } from "svelte/store";
-
-export const listId = writable(0);
+export const currentList = writable({});
+export const lastLocalModification = writable(0);

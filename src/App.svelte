@@ -1,8 +1,5 @@
 <script>
-  import { onMount } from "svelte";
-  import { listId } from "./store.js";
-  import { fly } from "svelte/transition";
-
+  import { currentList, lastLocalModification } from "./store.js";
   import ModalSettings from "./components/ModalSettings.svelte";
   import ModalListAdd from "./components/ModalListAdd.svelte";
   import List from "./components/List.svelte";
@@ -11,32 +8,15 @@
   const localDb = new PouchDB(localDbName);
 
   let lists = [];
-  // if listId is false, show all lists
-  // if a listId is set, display all the items in that list
-  let activeListId = false;
-  let list;
-  let screenWidth = 0;
-  let params = {
-    x: 0,
-    duration: 0,
-  };
+  let currentView = "master-view";
 
-  listId.subscribe((value) => {
-    console.log(value, lists);
-    activeListId = value;
-    if (activeListId) {
-      list = lists.reduce((list) => list._id === activeListId);
+  $: $lastLocalModification, getLists();
+  $: $currentList, listChange();
+
+  function listChange() {
+    if (Object.keys($currentList).length) {
+      currentView = "detail-view";
     }
-  });
-
-  function closeList() {
-    listId.update(() => false);
-  }
-
-  function start() {
-    console.log("hello");
-    params.x = screenWidth;
-    params.duration = 2000;
   }
 
   function getLists() {
@@ -48,7 +28,6 @@
       },
       function (error, response) {
         lists = response ? response.docs || response : response;
-        console.log(lists);
       }
     );
   }
@@ -57,18 +36,18 @@
 </script>
 
 <!-- banner -->
-<header class="navbar-fixed" bind:clientWidth={screenWidth}>
+<header class="navbar-fixed">
   <nav id="nav" class="primary-color">
     <div class="nav-wrapper">
       <span class="brand-logo left">
-        {#if activeListId}
-          <a href="#!" on:click={closeList} class=""
+        {#if currentView === "detail-view"}
+          <a href="#!" on:click={() => (currentView = "master-view")}
             ><i class="material-icons">arrow_back</i></a
           >
         {/if}
         <span id="header-title">
-          {#if activeListId}
-            {list.title}
+          {#if currentView === "detail-view"}
+            {$currentList.title}
           {:else}
             Shopping Lists
           {/if}
@@ -83,35 +62,30 @@
   </nav>
 </header>
 <!-- content area -->
-<main>
-  {#if !activeListId}
-    <!-- shopping lists get inserted here -->
-    <div id="shopping-lists">
-      {#await lists}
-        ... loading
-      {:then lists}
-        {#each lists as list}
-          <List {list} {localDb} />
-        {/each}
-      {/await}
-    </div>
-  {:else}
-    <ul id="shopping-list-items" class="collection">
-      width = {screenWidth}
-      collection
-      <!-- shopping list items get inserted here -->
-    </ul>
-  {/if}
+<main class={currentView}>
+  <!-- shopping lists get inserted here -->
+  <div id="shopping-lists">
+    {#await lists}
+      ... loading
+    {:then lists}
+      {#each lists as list}
+        <List {list} {localDb} />
+      {/each}
+    {/await}
+  </div>
 
-  <!-- add more stuff button -->
-  <button
-    id="add-button"
-    class="btn-floating btn-large secondary-color right modal-trigger"
-    data-target="modal-list-add"
-  >
-    <i class="material-icons">add</i>
-  </button>
+  <ul id="shopping-list-items">
+    <!-- shopping list items get inserted here -->
+  </ul>
 </main>
+
+<!-- add more stuff button -->
+<button
+  class="fixed-action-btn btn-floating btn-large secondary-color modal-trigger"
+  data-target="modal-list-add"
+>
+  <i class="large material-icons">add</i>
+</button>
 
 <!-- modal: add a shopping list settings form -->
 <ModalSettings {localDb} />

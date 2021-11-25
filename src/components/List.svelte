@@ -1,31 +1,32 @@
 <script>
-  import { listId } from "../store.js";
+  import { currentList, lastLocalModification } from "../store.js";
 
   export let list;
   export let localDb;
 
   let checkedText = "0 items";
-  // this collapsible component is either in viewState or editState
-  let viewState = "open";
 
-  $: editState = viewState === "open" ? "closed" : "open"; // here we listen to viewState
+  // this collapsible component is either in view or edit mode
+  let isEdit = false;
 
-  // toggle between viewState and editState
+  // toggle between view and edit mode
   function toggle() {
-    viewState = viewState === "closed" ? "open" : "closed";
+    isEdit = !isEdit;
   }
 
-  // set the listId
+  // set the current list
+  // App listens to store change
+  // when $currentList is set triggering a change from master-vie to detail-view
   function openList() {
-    listId.update(() => list._id);
+    $currentList = list;
   }
 
   async function remove() {
-    if (viewState === "open") return;
     try {
       const result = await localDb.remove(list._id, list._rev);
       if (result) {
-        viewState = "open";
+        $lastLocalModification = new Date().toString();
+        toggle();
       }
     } catch (error) {
       console.error(error);
@@ -33,9 +34,10 @@
   }
 
   async function update() {
-    if (viewState === "open") return;
+    if (!isEdit) return;
     try {
       const result = await localDb.put(list);
+      $lastLocalModification = new Date().toString();
       toggle();
     } catch (error) {
       console.error(error);
@@ -44,7 +46,7 @@
 </script>
 
 <div class="card collapsible">
-  <div class="list-view collapsible {viewState}">
+  <div class="list-view collapsible {isEdit ? 'closed' : 'open'}">
     <div class="card-content" on:click={openList}>
       <span class="card-title activator"
         >{list.title}
@@ -62,7 +64,7 @@
       >
     </div>
   </div>
-  <div class="list-edit collapsible {editState}">
+  <div class="list-edit collapsible {isEdit ? 'open' : 'closed'}">
     <form class="col s12 white" on:submit|preventDefault={update}>
       <div class="card-content">
         <span class="card-title">
@@ -81,8 +83,8 @@
               type="text"
               class="validate"
               bind:value={list.title}
-              placeholder="Supermarket"
-              required=""
+              placeholder="Your shopping list name"
+              required="true"
             />
           </div>
         </div>

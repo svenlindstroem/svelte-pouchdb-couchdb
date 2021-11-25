@@ -1,4 +1,5 @@
 <script>
+  import { lastLocalModification } from "../store.js";
   export let localDb;
 
   let listName = "";
@@ -24,6 +25,7 @@
       console.log(error, result);
       if (!error) {
         listName = "";
+        $lastLocalModification = new Date().toString();
         document.querySelector("#modal-list-add .modal-close").click();
       }
     });
