@@ -1,6 +1,28 @@
 <script>
-  import { lastLocalModification } from "../store.js";
-  export let localDb;
+  import { currentList, lastLocalModification } from "../store.js";
+  export let localDb, currentView;
+
+  let itemName = "";
+  function addItem() {
+    const item = {
+      _id: "item:" + new Date().toISOString(),
+      type: "item",
+      version: 1,
+      list: $currentList._id,
+      title: itemName,
+      checked: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: "",
+    };
+
+    localDb.put(item, function (error, result) {
+      if (!error) {
+        itemName = "";
+        $lastLocalModification = new Date().toString();
+        document.querySelector("#modal-list-add .modal-close").click();
+      }
+    });
+  }
 
   let listName = "";
   function addList() {
@@ -33,29 +55,57 @@
 </script>
 
 <div id="modal-list-add" class="modal bottom-sheet list-bottom-sheet">
-  <form
-    id="shopping-list-add"
-    class="col s12 white"
-    on:submit|preventDefault={addList}
-  >
-    <div class="modal-content">
-      <h5 id="create-shopping-list">Create a Shopping List</h5>
-      <div class="row">
-        <div class="input-field col s12">
-          <input
-            name="title"
-            type="text"
-            class="validate"
-            placeholder="Enter a title for the shopping list"
-            required
-            bind:value={listName}
-          />
+  {#if currentView === "detail-view"}
+    <form
+      id="item-add"
+      class="col s12 white"
+      on:submit|preventDefault={addItem}
+    >
+      <div class="modal-content">
+        <h5 id="create-shopping-list">Add an Item</h5>
+        <div class="row">
+          <div class="input-field col s12">
+            <input
+              name="title"
+              type="text"
+              class="validate"
+              placeholder="Enter an item to add to the shopping list"
+              required
+              bind:value={itemName}
+            />
+          </div>
         </div>
       </div>
-    </div>
-    <div class="modal-footer primary-color">
-      <button class="btn-flat modal-close" type="button">Cancel</button>
-      <button class="btn-flat" type="submit">Add</button>
-    </div>
-  </form>
+      <div class="modal-footer primary-color">
+        <button class="btn-flat modal-close" type="button">Cancel</button>
+        <button class="btn-flat" type="submit">Add</button>
+      </div>
+    </form>
+  {:else}
+    <form
+      id="shopping-list-add"
+      class="col s12 white"
+      on:submit|preventDefault={addList}
+    >
+      <div class="modal-content">
+        <h5 id="create-shopping-list">Create a Shopping List</h5>
+        <div class="row">
+          <div class="input-field col s12">
+            <input
+              name="title"
+              type="text"
+              class="validate"
+              placeholder="Enter a title for the shopping list"
+              required
+              bind:value={listName}
+            />
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer primary-color">
+        <button class="btn-flat modal-close" type="button">Cancel</button>
+        <button class="btn-flat" type="submit">Add</button>
+      </div>
+    </form>
+  {/if}
 </div>

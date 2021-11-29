@@ -3,19 +3,24 @@
   import ModalSettings from "./components/ModalSettings.svelte";
   import ModalListAdd from "./components/ModalListAdd.svelte";
   import List from "./components/List.svelte";
+  import Item from "./components/Item.svelte";
 
-  const localDbName = "shopping";
+  const localDbName = "shopping2";
   const localDb = new PouchDB(localDbName);
 
   let lists = [];
+  let items = [];
   let currentView = "master-view";
 
-  $: $lastLocalModification, getLists();
+  $: $lastLocalModification, getLists(), getItems();
   $: $currentList, listChange();
 
   function listChange() {
     if (Object.keys($currentList).length) {
       currentView = "detail-view";
+      getItems();
+    } else {
+      $currentList = {};
     }
   }
 
@@ -28,6 +33,19 @@
       },
       function (error, response) {
         lists = response ? response.docs || response : response;
+      }
+    );
+  }
+
+  function getItems() {
+    localDb.find(
+      {
+        selector: {
+          list: $currentList._id,
+        },
+      },
+      function (error, response) {
+        items = response ? response.docs || response : response;
       }
     );
   }
@@ -76,6 +94,9 @@
 
   <ul id="shopping-list-items">
     <!-- shopping list items get inserted here -->
+    {#each items as item}
+      <Item {localDb} {item} />
+    {/each}
   </ul>
 </main>
 
@@ -91,7 +112,7 @@
 <ModalSettings {localDb} />
 
 <!-- modal: add a shopping list form -->
-<ModalListAdd {localDb} />
+<ModalListAdd {localDb} {currentView} />
 
 <style>
 </style>
