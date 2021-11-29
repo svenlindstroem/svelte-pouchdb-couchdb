@@ -33,7 +33,7 @@
       remoteDB: remoteUrl, // bound variable
     };
 
-    // get the previous aved setting if any
+    // get the previous saved setting if any
     const doc = await getSettings();
     if (doc && doc._rev) {
       // for an update operation a _rev is required
