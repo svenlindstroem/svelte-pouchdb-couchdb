@@ -1,5 +1,6 @@
 <script>
   import { currentList, lastLocalModification } from "./store.js";
+  import ModalAbout from "./components/ModalAbout.svelte";
   import ModalSettings from "./components/ModalSettings.svelte";
   import ModalListAdd from "./components/ModalListAdd.svelte";
   import List from "./components/List.svelte";
@@ -73,8 +74,14 @@
       </span>
       <!-- settings button -->
       <a
+        href="#modal-about"
         class="waves-effect waves-light modal-trigger right settings"
-        href="#modal-settings"><i class="material-icons">settings</i></a
+        ><i class="material-icons">info_outline</i></a
+      >
+      <a
+        href="#modal-settings"
+        class="waves-effect waves-light modal-trigger right settings"
+        ><i class="material-icons">settings</i></a
       >
     </div>
   </nav>
@@ -110,6 +117,9 @@
 
 <!-- modal: add a shopping list settings form -->
 <ModalSettings {localDb} />
+
+<!-- modal: open shopping list about -->
+<ModalAbout />
 
 <!-- modal: add a shopping list form -->
 <ModalListAdd {localDb} {currentView} />
