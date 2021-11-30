@@ -128,9 +128,11 @@ input:focus:not([disabled]):not([readonly]) {
   border-bottom-color: #52647a !important;
 }
 
+/*
 .goback {
   visibility: hidden;
 }
+*/
 
 /*
 body[data-list-id] .goback {
