@@ -2,7 +2,7 @@
   import { currentList, lastLocalModification } from "./store.js";
   import ModalAbout from "./components/ModalAbout.svelte";
   import ModalSettings from "./components/ModalSettings.svelte";
-  import ModalListAdd from "./components/ModalListAdd.svelte";
+  import ModalAdd from "./components/ModalAdd.svelte";
   import List from "./components/List.svelte";
   import Item from "./components/Item.svelte";
 
@@ -110,7 +110,7 @@
 <!-- add more stuff button -->
 <button
   class="fixed-action-btn btn-floating btn-large secondary-color modal-trigger"
-  data-target="modal-list-add"
+  data-target="modal-add"
 >
   <i class="large material-icons">add</i>
 </button>
@@ -121,8 +121,8 @@
 <!-- modal: open shopping list about -->
 <ModalAbout />
 
-<!-- modal: add a shopping list form -->
-<ModalListAdd {localDb} {currentView} />
+<!-- modal: add a shopping list or an item form -->
+<ModalAdd {localDb} {currentView} />
 
 <style>
 </style>
