@@ -122,7 +122,7 @@
 <ModalAbout />
 
 <!-- modal: add a shopping list or an item form -->
-<ModalAdd {localDb} {currentView} />
+<ModalAdd {localDb} />
 
 <style>
 </style>
