@@ -1,9 +1,14 @@
 <script>
   import { currentList, lastLocalModification } from "../store.js";
+  import focusHelper from "../helper.js";
   export let localDb;
 
   let title = "";
   let doc;
+
+  // bind input, element will be passed to the focusHelper function
+  let input;
+
   function add() {
     if ($currentList && $currentList._id) {
       // adding an item
@@ -39,12 +44,6 @@
     save(doc);
   }
 
-  function addList() {
-    console.log("1", $currentList && $currentList._id);
-
-    save(doc);
-  }
-
   function save(doc) {
     localDb.put(doc, function (error, result) {
       console.log(error, result);
@@ -55,18 +54,12 @@
       }
     });
   }
-
-  // when modal receives focus, clear value and refocus on input field
-  function reFocus() {
-    title = "";
-    document.querySelector("#add").focus();
-  }
 </script>
 
 <div
   id="modal-add"
-  on:focus={reFocus}
   class="modal bottom-sheet list-bottom-sheet"
+  on:focus={() => focusHelper(input)}
 >
   <!-- add item or list -->
   <form id="item-add" class="col s12 white" on:submit|preventDefault={add}>
@@ -79,7 +72,6 @@
       <div class="row">
         <div class="input-field col s12">
           <input
-            id="add"
             name="title"
             type="text"
             class="validate"
@@ -87,6 +79,7 @@
               ? "Enter an item to add to the shopping list"
               : "Enter a title for the shopping list"}
             required
+            bind:this={input}
             bind:value={title}
           />
         </div>

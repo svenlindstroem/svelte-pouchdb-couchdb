@@ -1,5 +1,6 @@
 <script>
   import { lastLocalModification } from "../store.js";
+  import focusHelper from "../helper";
 
   export let item;
   export let localDb;
@@ -7,9 +8,15 @@
   // this collapsible component is either in view or edit mode
   let isEdit = false;
 
+  // bind input, element will be passed to the focusHelper function
+  let input;
+
   // toggle between view and edit mode
   function toggle() {
     isEdit = !isEdit;
+    if (isEdit) {
+      focusHelper(input);
+    }
   }
 
   async function remove() {
@@ -27,13 +34,9 @@
   async function check() {
     try {
       const doc = item;
-      // attention,binding does not work as expected
-      // item.checked !== this.checked !!!
-      console.log(item.checked, this.checked);
       doc.checked = this.checked;
       doc.updatedAt = new Date().toISOString();
       const result = await localDb.put(doc);
-      console.log(result);
       item = await localDb.get(doc._id);
       $lastLocalModification = new Date().toString();
     } catch (error) {
@@ -86,10 +89,11 @@
               name="title"
               type="text"
               class="validate"
-              bind:value={item.title}
               placeholder="item name"
               aria-hidden="true"
               required=""
+              bind:this={input}
+              bind:value={item.title}
             />
           </div>
         </div>

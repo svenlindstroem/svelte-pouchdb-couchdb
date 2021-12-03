@@ -1,9 +1,12 @@
 <script>
   import { currentList, lastLocalModification } from "../store.js";
+  import focusHelper from "../helper.js";
 
   export let list;
   export let localDb;
 
+  // bind input, element will be passed to the focusHelper function
+  let input;
   let checkedText = "0 items";
 
   // this collapsible component is either in view or edit mode
@@ -12,9 +15,12 @@
   // toggle between view and edit mode
   function toggle() {
     isEdit = !isEdit;
+    if (isEdit) {
+      focusHelper(input);
+    }
   }
 
-  // set the current list
+  // set the current list object
   // App listens to store change
   // when $currentList is set triggering a change from master-vie to detail-view
   function openList() {
@@ -43,6 +49,7 @@
       console.error(error);
     }
   }
+  function niceId() {}
 </script>
 
 <div class="card collapsible">
@@ -79,10 +86,12 @@
         <div class="row">
           <div class="input-field col s12">
             <input
+              id={"input" + Math.floor(Math.random() * 100000)}
               name="title"
               type="text"
               class="validate"
               bind:value={list.title}
+              bind:this={input}
               placeholder="Your shopping list name"
               required="true"
             />

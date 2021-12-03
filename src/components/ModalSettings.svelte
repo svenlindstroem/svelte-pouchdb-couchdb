@@ -1,10 +1,14 @@
 <script>
   import { onMount } from "svelte";
+  import focusHelper from "../helper.js";
 
   export let localDb;
 
   let remoteUrl;
   let rev;
+
+  // bind input, element will be passed to the focusHelper function
+  let input;
 
   onMount(async () => {
     try {
@@ -51,7 +55,11 @@
   }
 </script>
 
-<div id="modal-settings" class="modal top-sheet settings-top-sheet">
+<div
+  id="modal-settings"
+  class="modal top-sheet settings-top-sheet"
+  on:focus={() => focusHelper(input)}
+>
   <form
     id="shopping-list-settings"
     class="col s12 white"
@@ -71,6 +79,7 @@
             type="url"
             class="validate"
             placeholder="http://username:password@localhost:5984/database"
+            bind:this={input}
             bind:value={remoteUrl}
           />
           <div class="chip" />
