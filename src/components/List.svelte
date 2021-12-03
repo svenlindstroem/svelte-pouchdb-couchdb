@@ -7,7 +7,36 @@
 
   // bind input, element will be passed to the focusHelper function
   let input;
-  let checkedText = "0 items";
+
+  let totalItems = 0;
+  let checkedItems = 0;
+
+  $: checkedText =
+    totalItems === 0 ? "O items" : `${checkedItems} of ${totalItems} checked`;
+
+  // count total and checked items
+  function count() {
+    localDb.find(
+      {
+        selector: {
+          type: "item",
+          list: list._id,
+        },
+      },
+      function (error, response) {
+        if (error) {
+          console.log(error);
+          return;
+        }
+        let docs = response.docs;
+        totalItems = docs.length;
+        checkedItems = docs.reduce(
+          (carry, obj) => (obj.checked ? carry + 1 : carry),
+          0
+        );
+      }
+    );
+  }
 
   // this collapsible component is either in view or edit mode
   let isEdit = false;
@@ -49,7 +78,9 @@
       console.error(error);
     }
   }
-  function niceId() {}
+
+  // count again is db is modified
+  $: $lastLocalModification, count();
 </script>
 
 <div class="card collapsible">
