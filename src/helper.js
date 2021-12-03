@@ -6,7 +6,7 @@
  * end of input text (if any)
  */
 function focusHelper(element) {
-  console.log(Object.prototype.toString.call(element));
+  // console.log(Object.prototype.toString.call(element));
   element.focus();
   if (typeof element.selectionStart == "number") {
     element.selectionStart = element.selectionEnd = element.value.length;
