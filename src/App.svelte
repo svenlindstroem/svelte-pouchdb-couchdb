@@ -9,6 +9,12 @@
   const localDbName = "shopping2";
   const localDb = new PouchDB(localDbName);
 
+  // pouchdb debugging
+
+  // PouchDB.debug.enable("*");
+  // PouchDB.debug.disable();
+  // localDb.on("error", function (err) {debugger;});
+
   let lists = [];
   let items = [];
   let currentView = "master-view";
