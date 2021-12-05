@@ -11,6 +11,7 @@
   let totalItems = 0;
   let checkedItems = 0;
 
+  // listen to total and checked items to set up checked text
   $: checkedText =
     totalItems === 0 ? "O items" : `${checkedItems} of ${totalItems} checked`;
 
@@ -56,10 +57,33 @@
     $currentList = list;
   }
 
+  // remove items, then remove list
   async function remove() {
     try {
-      const result = await localDb.remove(list._id, list._rev);
-      if (result) {
+      // 1. remove items
+      // create index to speed up itemsResult selector
+      const index = await localDb.createIndex({
+        index: { fields: ["list"] },
+      });
+
+      const itemsResult = await localDb.find({
+        selector: {
+          list: list._id,
+        },
+      });
+
+      // mark docs for deletion
+      if (itemsResult.docs.length) {
+        itemsResult.docs.forEach((doc) => {
+          doc._deleted = true;
+        });
+        // bulk remove docs
+        const deleteItemsResult = await localDb.bulkDocs(itemsResult.docs);
+      }
+
+      // 2. remove list
+      const listResult = await localDb.remove(list._id, list._rev);
+      if (listResult) {
         $lastLocalModification = new Date().toString();
         toggle();
       }
