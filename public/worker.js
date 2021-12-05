@@ -1,5 +1,4 @@
 /* global self, caches, fetch */
-/*
 "use strict";
 
 var CACHE_NAME = "v1";
@@ -77,4 +76,3 @@ self.addEventListener("activate", function (event) {
     })
   );
 });
-*/
