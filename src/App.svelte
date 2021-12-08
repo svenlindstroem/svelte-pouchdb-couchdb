@@ -1,5 +1,6 @@
 <script>
   import { currentList, lastLocalModification } from "./store.js";
+  import { emptyObj } from "./helper";
   import ModalAbout from "./components/ModalAbout.svelte";
   import ModalSettings from "./components/ModalSettings.svelte";
   import ModalAdd from "./components/ModalAdd.svelte";
@@ -10,7 +11,6 @@
   const localDb = new PouchDB(localDbName);
 
   // pouchdb debugging
-
   // PouchDB.debug.enable("*");
   // PouchDB.debug.disable();
   // localDb.on("error", function (err) {debugger;});
@@ -18,20 +18,19 @@
   let online; // listen to online / offline event on window
   let lists = [];
   let items = [];
-  let currentView = "master-view";
 
   $: $lastLocalModification, getLists(), getItems();
   $: $currentList, listChange();
 
   function listChange() {
-    if (Object.keys($currentList).length) {
-      currentView = "detail-view";
+    if (!emptyObj($currentList)) {
       getItems();
-    } else {
-      $currentList = {};
     }
   }
 
+  /**
+   * Get all lists
+   */
   function getLists() {
     localDb.find(
       {
@@ -45,6 +44,9 @@
     );
   }
 
+  /**
+   * get items based on $currenList._id
+   */
   function getItems() {
     localDb.find(
       {
@@ -73,18 +75,17 @@
   <header class="navbar-fixed">
     <nav id="nav" class="primary-color">
       <div class="nav-wrapper">
-        <span class="brand-logo left {currentView}">
-          {#if currentView === "detail-view"}
-            <a
-              class="test"
-              href="#!"
-              on:click={() => (currentView = "master-view")}
+        <span
+          class="brand-logo left {emptyObj($currentList) ? 'master-view' : ''}"
+        >
+          {#if !emptyObj($currentList)}
+            <a href="#!" on:click={() => ($currentList = {})}
               ><i class="material-icons">arrow_back</i></a
             >
           {/if}
 
           <span id="header-title">
-            {#if currentView === "detail-view"}
+            {#if !emptyObj($currentList)}
               {$currentList.title}
             {:else}
               Shopping Lists
@@ -106,7 +107,7 @@
     </nav>
   </header>
   <!-- content area -->
-  <main class={currentView}>
+  <main class={emptyObj($currentList) ? "" : "detail-view"}>
     <!-- shopping lists get inserted here -->
     <div id="shopping-lists">
       {#await lists}
