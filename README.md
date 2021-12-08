@@ -1,3 +1,11 @@
+# Shopping List App
+
+This repo is a Svelte implementation of SPA PWA [ibm-watson-data-lab/shopping-list](https://github.com/ibm-watson-data-lab/shopping-list).
+
+"[Shopping list](https://github.com/ibm-watson-data-lab/shopping-list) is a series of Offline First demo apps, each built using a different stack. This is a JavaScript implementation of the domain model for the Shopping List app. This package may be used in Vanilla JS, Polymer, React, Preact, Vue.js, Ember.js, React Native, Ionic, Cordova, Electron, and any other JavaScript implementation of the Shopping List demo app."
+
+---
+
 `npx degit sveltejs/template shopping-list-svelte-pouchdb`
 
 `cd shopping-list-svelte-pouchdb`
@@ -8,17 +16,21 @@
 
 [opens on http://localhost:5000](http://localhost:5000)
 
-_Psst — looking for a more complete solution? Check out [SvelteKit](https://kit.svelte.dev), the official framework for building web applications of all sizes, with a beautiful development experience and flexible filesystem-based routing._
-
-_Looking for a shareable component template instead? You can [use SvelteKit for that as well](https://kit.svelte.dev/docs#packaging) or the older [sveltejs/component-template](https://github.com/sveltejs/component-template)_
-
----
-
 # svelte app
 
 This is a project template for [Svelte](https://svelte.dev) apps. It lives at https://github.com/sveltejs/template.
 
 To create a new project based on this template using [degit](https://github.com/Rich-Harris/degit):
+
+`npx degit sveltejs/template shopping-list-svelte-pouchdb`
+
+`cd shopping-list-svelte-pouchdb`
+
+`npm install`
+
+`npm run dev`
+
+[opens on http://localhost:5000](http://localhost:5000)
 
 ```bash
 npx degit sveltejs/template svelte-app
