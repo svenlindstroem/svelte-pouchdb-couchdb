@@ -16,5 +16,13 @@ function focusHelper(element) {
     range.select();
   }
 }
+/**
+ * check if object is empty
+ * @param {*} obj
+ * @returns boolean
+ */
+function emptyObj(obj) {
+  return Object.keys(obj).length ? false : true;
+}
 
-export default focusHelper;
+export { focusHelper, emptyObj };

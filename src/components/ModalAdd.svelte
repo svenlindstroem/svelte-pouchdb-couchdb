@@ -1,6 +1,6 @@
 <script>
   import { currentList, lastLocalModification } from "../store.js";
-  import focusHelper from "../helper.js";
+  import { focusHelper } from "../helper.js";
   export let localDb;
 
   let title = "";

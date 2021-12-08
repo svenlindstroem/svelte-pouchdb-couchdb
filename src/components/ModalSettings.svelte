@@ -1,6 +1,6 @@
 <script>
   import { onMount } from "svelte";
-  import focusHelper from "../helper.js";
+  import { focusHelper } from "../helper.js";
 
   export let localDb;
 

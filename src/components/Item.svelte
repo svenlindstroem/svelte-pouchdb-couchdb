@@ -1,6 +1,6 @@
 <script>
   import { lastLocalModification } from "../store.js";
-  import focusHelper from "../helper";
+  import { focusHelper } from "../helper";
 
   export let item;
   export let localDb;

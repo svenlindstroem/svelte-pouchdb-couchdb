@@ -1,6 +1,6 @@
 <script>
   import { currentList, lastLocalModification } from "../store.js";
-  import focusHelper from "../helper.js";
+  import { focusHelper } from "../helper.js";
 
   export let list;
   export let localDb;
@@ -61,7 +61,7 @@
   async function remove() {
     try {
       // 1. remove items
-      // create index to speed up itemsResult selector
+      // 1.1 create index to speed up itemsResult selector
       const index = await localDb.createIndex({
         index: { fields: ["list"] },
       });
@@ -72,12 +72,12 @@
         },
       });
 
-      // mark docs for deletion
+      // 1.2 mark docs for deletion
       if (itemsResult.docs.length) {
         itemsResult.docs.forEach((doc) => {
           doc._deleted = true;
         });
-        // bulk remove docs
+        // 1.3 bulk remove docs
         const deleteItemsResult = await localDb.bulkDocs(itemsResult.docs);
       }
 
