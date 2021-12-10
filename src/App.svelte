@@ -6,6 +6,7 @@
   import ModalAdd from "./components/ModalAdd.svelte";
   import List from "./components/List.svelte";
   import Item from "./components/Item.svelte";
+  import { onMount } from "svelte";
 
   const localDbName = "shopping2";
   const localDb = new PouchDB(localDbName);
@@ -18,9 +19,50 @@
   let online; // listen to online / offline event on window
   let lists = [];
   let items = [];
+  let settings;
+  let syncing = false;
+  let syncError = true;
 
+  // listeners
   $: $lastLocalModification, getLists(), getItems();
   $: $currentList, listChange();
+  $: online, onlineChange();
+
+  function onlineChange() {
+    console.log("online change", online);
+    //sync();
+  }
+
+  onMount(async () => {
+    try {
+      settings = await localDb.get("_local/user");
+      if (settings.remoteDB) {
+        syncing = true;
+        sync();
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  });
+
+  function sync() {
+    if (!settings.remoteDB) return;
+    localDb
+      .sync(settings.remoteDB, { live: true, retry: true })
+      .on("change", (change) => {
+        if (change.direction === "pull") {
+          getLists();
+          getItems();
+        }
+        // console.log("something changed!", change);
+      })
+      // .on('paused', info => console.log('replication paused.'))
+      .on("active", (info) => console.log("replication resumed.", info))
+      .on("error", (error) => {
+        syncing = false;
+        console.error("not syncing", error);
+      });
+  }
 
   function listChange() {
     if (!emptyObj($currentList)) {
@@ -79,7 +121,7 @@
           class="brand-logo left {emptyObj($currentList) ? 'master-view' : ''}"
         >
           {#if !emptyObj($currentList)}
-            <a href="#!" on:click={() => ($currentList = {})}
+            <a href="#!" on:click|preventDefault={() => ($currentList = {})}
               ><i class="material-icons">arrow_back</i></a
             >
           {/if}
@@ -101,8 +143,13 @@
         <a
           href="#modal-settings"
           class="waves-effect waves-light modal-trigger right settings"
-          ><i class="material-icons">settings</i></a
         >
+          {#if !syncing}
+            <i class="material-icons secondary-text lighter">error</i>
+          {:else}
+            <i class="material-icons">settings</i>
+          {/if}
+        </a>
       </div>
     </nav>
   </header>
@@ -135,7 +182,7 @@
   </button>
 
   <!-- modal: add a shopping list settings form -->
-  <ModalSettings {localDb} />
+  <ModalSettings {localDb} {settings} />
 
   <!-- modal: open shopping list about -->
   <ModalAbout />

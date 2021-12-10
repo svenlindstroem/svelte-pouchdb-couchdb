@@ -3,9 +3,9 @@
   import { focusHelper } from "../helper.js";
 
   export let localDb;
-
+  export let settings;
   let remoteUrl;
-  let rev;
+  //let rev;
 
   // bind input, element will be passed to the focusHelper function
   let input;
@@ -14,13 +14,13 @@
     try {
       const current = await localDb.get("_local/user");
       remoteUrl = current.remoteDB;
-      rev = current._rev;
+      // rev = current._rev;
     } catch (error) {
       console.log(error);
     }
   });
 
-  async function getSettings(id) {
+  async function getSettings() {
     try {
       const result = await localDb.get("_local/user");
       return result;
@@ -44,6 +44,7 @@
       settings._rev = doc._rev;
     }
 
+    // todo async
     localDb.put(settings, function (error, response) {
       console.log("save settings", error, response);
       if (error) {

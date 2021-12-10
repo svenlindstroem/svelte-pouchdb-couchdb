@@ -44,13 +44,15 @@
     save(doc);
   }
 
+  // todo: async
   function save(doc) {
     localDb.put(doc, function (error, result) {
-      console.log(error, result);
       if (!error) {
         title = "";
         $lastLocalModification = new Date().toString();
         document.querySelector("#modal-add .modal-close").click();
+      } else {
+        console.log(error);
       }
     });
   }
