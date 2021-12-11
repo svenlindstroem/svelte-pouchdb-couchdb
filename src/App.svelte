@@ -11,17 +11,27 @@
   const localDbName = "shopping2";
   const localDb = new PouchDB(localDbName);
 
+  // todo:
+  // let enableFoo
+  // <p class:foo="{enableFoo}">foo</p>
+
   // pouchdb debugging
   // PouchDB.debug.enable("*");
   // PouchDB.debug.disable();
   // localDb.on("error", function (err) {debugger;});
 
+  // https://stackoverflow.com/questions/26892438/how-to-know-when-weve-lost-sync-with-a-remote-couchdb
+
   let online; // listen to online / offline event on window
   let lists = [];
   let items = [];
   let settings;
-  let syncing = false;
+  let syncing = true;
+  let sync;
   let syncError = true;
+
+  let pouchDbSyncActiveEvent = false;
+  let pouchDbSyncChangeEvent = false;
 
   // listeners
   $: $lastLocalModification, getLists(), getItems();
@@ -29,8 +39,17 @@
   $: online, onlineChange();
 
   function onlineChange() {
-    console.log("online change", online);
-    //sync();
+    console.log("online change", online, syncing, sync);
+    if (!syncing) restartSync();
+  }
+
+  function restartSync() {
+    sync.on("complete", () => {
+      console.log("resume");
+      startSync();
+      //sync = localDb.sync(settings.remoteDB, { live: true, retry: true });
+    });
+    //sync.cancel();
   }
 
   onMount(async () => {
@@ -38,28 +57,44 @@
       settings = await localDb.get("_local/user");
       if (settings.remoteDB) {
         syncing = true;
-        sync();
+        startSync();
       }
     } catch (error) {
       console.log(error);
     }
   });
 
-  function sync() {
+  function startSync() {
     if (!settings.remoteDB) return;
-    localDb
+    sync = localDb
       .sync(settings.remoteDB, { live: true, retry: true })
       .on("change", (change) => {
+        pouchDbSyncChangeEvent = true;
         if (change.direction === "pull") {
           getLists();
           getItems();
         }
         // console.log("something changed!", change);
       })
-      // .on('paused', info => console.log('replication paused.'))
-      .on("active", (info) => console.log("replication resumed.", info))
+
+      .on("active", (info) => {
+        pouchDbSyncActiveEvent = true;
+        console.log("replication resumed.", info);
+      })
+      .on("paused", (info) => {
+        console.log("replication paused.");
+        if (pouchDbSyncActiveEvent == true && pouchDbSyncChangeEvent == false) {
+          // Gotcha! Syncing with remote DB not happening!
+          console.error("stoped syncing");
+        } else {
+          pouchDbSyncActiveEvent = false;
+          pouchDbSyncChangeEvent = false;
+          console.log("sync ok");
+          syncing = true;
+          // Everything's ok. Syncing with remote DB happening normally.
+        }
+      })
       .on("error", (error) => {
-        syncing = false;
         console.error("not syncing", error);
       });
   }
