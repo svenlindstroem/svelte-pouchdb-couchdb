@@ -28,31 +28,44 @@
   let settings;
   let syncing = true;
   let sync;
-  let syncError = true;
+  let syncError = false;
 
   let pouchDbSyncActiveEvent = false;
   let pouchDbSyncChangeEvent = false;
 
+  /*
+  $: syncError, handleSyncError();
+  
+  function handleSyncError() {
+    console.log("syncError is", syncError);
+  }
+  */
+
   // listeners
   $: $lastLocalModification, getLists(), getItems();
   $: $currentList, listChange();
-  $: online, onlineChange();
+  $: online, resumeSync();
 
-  function onlineChange() {
-    console.log("online change", online, syncing, sync);
-    if (!syncing) restartSync();
-  }
-
-  function restartSync() {
-    sync.on("complete", () => {
-      console.log("resume");
+  /**
+   * resume syncing after online changed from false to true;
+   */
+  function resumeSync() {
+    if (online && sync && sync.canceled) {
+      syncError = true;
+    }
+    if (online && sync && sync.canceled) {
+      console.log("resuming syncinf after offline event");
       startSync();
-      //sync = localDb.sync(settings.remoteDB, { live: true, retry: true });
-    });
-    //sync.cancel();
+    }
+    console.log("online change", online, syncing, sync);
   }
 
   onMount(async () => {
+    await getSetttings();
+    startSync();
+  });
+
+  async function getSetttings() {
     try {
       settings = await localDb.get("_local/user");
       if (settings.remoteDB) {
@@ -60,14 +73,16 @@
         startSync();
       }
     } catch (error) {
-      console.log(error);
+      console.log("can't get settings", error);
     }
-  });
+  }
 
   function startSync() {
-    if (!settings.remoteDB) return;
+    if (settings.remoteDB) return;
+
+    // in order for the on error event to fire, retry needs to be false
     sync = localDb
-      .sync(settings.remoteDB, { live: true, retry: true })
+      .sync(settings.remoteDB, { live: true, retry: false })
       .on("change", (change) => {
         pouchDbSyncChangeEvent = true;
         if (change.direction === "pull") {
@@ -76,13 +91,22 @@
         }
         // console.log("something changed!", change);
       })
-
+      // complete (info) - This event fires when replication is completed or cancelled.
+      // In a live replication, only cancelling the replication should trigger this event.
+      /*
+      .on("complete", (info) => {
+        console.log("complete", info);
+      })
+      */
       .on("active", (info) => {
-        pouchDbSyncActiveEvent = true;
+        //pouchDbSyncActiveEvent = true;
         console.log("replication resumed.", info);
       })
-      .on("paused", (info) => {
-        console.log("replication paused.");
+      // paused (err) - This event fires when the replication is paused,
+      // either because a live replication is waiting for changes, or
+      // replication has temporarily failed, with err, and is attempting to resume.
+      .on("paused", (error) => {
+        // console.log("replication paused.", error);
         if (pouchDbSyncActiveEvent == true && pouchDbSyncChangeEvent == false) {
           // Gotcha! Syncing with remote DB not happening!
           console.error("stoped syncing");
@@ -90,12 +114,18 @@
           pouchDbSyncActiveEvent = false;
           pouchDbSyncChangeEvent = false;
           console.log("sync ok");
-          syncing = true;
+          syncError = false;
           // Everything's ok. Syncing with remote DB happening normally.
         }
       })
-      .on("error", (error) => {
-        console.error("not syncing", error);
+      .on("denied", (error, result) => {
+        console.log(error, result);
+      })
+      // on error fires only if retry is set to false
+      // ontherwise pouchdb will simply retry
+      .on("error", function (error) {
+        syncError = true;
+        console.log("not syncing", error);
       });
   }
 
@@ -179,7 +209,7 @@
           href="#modal-settings"
           class="waves-effect waves-light modal-trigger right settings"
         >
-          {#if !syncing}
+          {#if syncError === true}
             <i class="material-icons secondary-text lighter">error</i>
           {:else}
             <i class="material-icons">settings</i>
@@ -217,7 +247,7 @@
   </button>
 
   <!-- modal: add a shopping list settings form -->
-  <ModalSettings {localDb} {settings} />
+  <ModalSettings {localDb} {settings} {online} />
 
   <!-- modal: open shopping list about -->
   <ModalAbout />

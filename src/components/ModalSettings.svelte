@@ -4,16 +4,18 @@
 
   export let localDb;
   export let settings;
+  export let online;
+
   let remoteUrl;
-  //let rev;
+  let syncError = false;
 
   // bind input, element will be passed to the focusHelper function
   let input;
 
   onMount(async () => {
     try {
-      const current = await localDb.get("_local/user");
-      remoteUrl = current.remoteDB;
+      const currentSettings = await localDb.get("_local/user");
+      remoteUrl = currentSettings.remoteDB;
       // rev = current._rev;
     } catch (error) {
       console.log(error);
@@ -29,7 +31,36 @@
     }
   }
 
+  // http://admin:admin@localhost1:5984/shopping1
+
+  async function settingsUrlOk() {
+    const db = await new PouchDB(remoteUrl, {
+      skip_setup: true,
+    });
+
+    try {
+      const info = await db.info();
+      // info.status returns 404:
+      // connection succeded, but database not created (see skip_setup)
+      // info.db_name returns a string:
+      // database already exists
+      if ((info.status && info.status === 404) || info.db_name) {
+        return true;
+      }
+    } catch (error) {
+      syncError = true;
+      return false;
+    }
+  }
+
   async function saveSettings() {
+    if (!remoteUrl) return;
+
+    const ok = await settingsUrlOk();
+    console.log(ok);
+
+    if (!ok) return;
+
     const _id = "_local/user";
 
     const settings = {
@@ -44,22 +75,26 @@
       settings._rev = doc._rev;
     }
 
-    // todo async
-    localDb.put(settings, function (error, response) {
-      console.log("save settings", error, response);
-      if (error) {
-        console.error("Error saving these settings:", settings);
-      } else {
+    try {
+      const result = localDb.put(settings);
+      if (result) {
         document.querySelector("#modal-settings .modal-close").click();
       }
-    });
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  function focus() {
+    getSettings();
+    focusHelper(input);
   }
 </script>
 
 <div
   id="modal-settings"
   class="modal top-sheet settings-top-sheet"
-  on:focus={() => focusHelper(input)}
+  on:focus={focus}
 >
   <form
     id="shopping-list-settings"
@@ -83,13 +118,18 @@
             bind:this={input}
             bind:value={remoteUrl}
           />
-          <div class="chip" />
+          {#if !online}
+            <div class="chip">You are currently offline!</div>
+          {/if}
+          {#if syncError}
+            <div class="chip error">Sync Error</div>
+          {/if}
         </div>
       </div>
     </div>
     <div class="modal-footer secondary-color">
       <button class="btn-flat modal-close" type="button">Cancel</button>
-      <button class="btn-flat" type="submit">Sync</button>
+      <button class="btn-flat" type="submit" disabled={!online}>Sync</button>
     </div>
   </form>
 </div>
