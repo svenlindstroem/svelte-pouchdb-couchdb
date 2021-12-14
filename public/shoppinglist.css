@@ -366,9 +366,19 @@ body.shopping-list-about .about-top-sheet {
   top: -20px;
 }
 
+/*
 #shopping-list-settings .chip {
   display: none;
   font-weight: 300;
+}
+*/
+
+.chip {
+  font-weight: 300;
+}
+.chip.error {
+  background-color: #c83873;
+  color: #ffffff;
 }
 
 body.shopping-list-error-sync nav a.settings.settings-btn,
