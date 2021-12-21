@@ -8,7 +8,7 @@
   import Item from "./components/Item.svelte";
   import { onMount } from "svelte";
 
-  const localDbName = "shopping2";
+  const localDbName = "shopping-test";
   const localDb = new PouchDB(localDbName);
 
   // todo:
@@ -20,44 +20,34 @@
   // PouchDB.debug.disable();
   // localDb.on("error", function (err) {debugger;});
 
-  // https://stackoverflow.com/questions/26892438/how-to-know-when-weve-lost-sync-with-a-remote-couchdb
-
   let online; // listen to online / offline event on window
-  let lists = [];
-  let items = [];
-  let settings;
-  let syncing = true;
-  let sync;
+  let lists = []; // lists array
+  let items = []; // items array
+  let settings; // settings obj
+  let sync; // sync obj
   let syncError = false;
 
+  // https://stackoverflow.com/questions/26892438/how-to-know-when-weve-lost-sync-with-a-remote-couchdb
   let pouchDbSyncActiveEvent = false;
   let pouchDbSyncChangeEvent = false;
 
-  /*
-  $: syncError, handleSyncError();
-  
-  function handleSyncError() {
-    console.log("syncError is", syncError);
-  }
-  */
-
   // listeners
   $: $lastLocalModification, getLists(), getItems();
-  $: $currentList, listChange();
+  //$: $currentList, listChange();
   $: online, resumeSync();
+
+  $: $currentList && !emptyObj($currentList) && getItems();
 
   /**
    * resume syncing after online changed from false to true;
    */
   function resumeSync() {
     if (online && sync && sync.canceled) {
-      syncError = true;
-    }
-    if (online && sync && sync.canceled) {
-      console.log("resuming syncinf after offline event");
+      sync.cancel();
+      //localDb.removeAllListeners();
       startSync();
+      console.log("resuming sync after offline event", sync);
     }
-    console.log("online change", online, syncing, sync);
   }
 
   onMount(async () => {
@@ -68,8 +58,7 @@
   async function getSetttings() {
     try {
       settings = await localDb.get("_local/user");
-      if (settings.remoteDB) {
-        syncing = true;
+      if (settings) {
         startSync();
       }
     } catch (error) {
@@ -78,18 +67,18 @@
   }
 
   function startSync() {
-    if (settings.remoteDB) return;
+    if (!settings) return;
 
     // in order for the on error event to fire, retry needs to be false
     sync = localDb
       .sync(settings.remoteDB, { live: true, retry: false })
       .on("change", (change) => {
+        // console.log("something changed!", change);
         pouchDbSyncChangeEvent = true;
         if (change.direction === "pull") {
           getLists();
           getItems();
         }
-        // console.log("something changed!", change);
       })
       // complete (info) - This event fires when replication is completed or cancelled.
       // In a live replication, only cancelling the replication should trigger this event.
@@ -99,7 +88,7 @@
       })
       */
       .on("active", (info) => {
-        //pouchDbSyncActiveEvent = true;
+        pouchDbSyncActiveEvent = true;
         console.log("replication resumed.", info);
       })
       // paused (err) - This event fires when the replication is paused,
@@ -109,30 +98,23 @@
         // console.log("replication paused.", error);
         if (pouchDbSyncActiveEvent == true && pouchDbSyncChangeEvent == false) {
           // Gotcha! Syncing with remote DB not happening!
-          console.error("stoped syncing");
+          console.error("stoped syncing", error);
         } else {
           pouchDbSyncActiveEvent = false;
           pouchDbSyncChangeEvent = false;
-          console.log("sync ok");
           syncError = false;
           // Everything's ok. Syncing with remote DB happening normally.
         }
       })
       .on("denied", (error, result) => {
-        console.log(error, result);
+        console.log("denied", error, result);
       })
       // on error fires only if retry is set to false
       // ontherwise pouchdb will simply retry
       .on("error", function (error) {
         syncError = true;
-        console.log("not syncing", error);
+        console.error("error, not syncing", error);
       });
-  }
-
-  function listChange() {
-    if (!emptyObj($currentList)) {
-      getItems();
-    }
   }
 
   /**
@@ -165,6 +147,16 @@
         items = response ? response.docs || response : response;
       }
     );
+  }
+
+  /**
+   * receiveing a dispached message from ModalSettings
+   */
+
+  async function handleNewSettings() {
+    if (sync) sync.cancel();
+    await getSetttings();
+    startSync();
   }
 
   getLists();
@@ -247,7 +239,13 @@
   </button>
 
   <!-- modal: add a shopping list settings form -->
-  <ModalSettings {localDb} {settings} {online} />
+
+  <ModalSettings
+    on:newSettings={handleNewSettings}
+    {localDb}
+    {settings}
+    {online}
+  />
 
   <!-- modal: open shopping list about -->
   <ModalAbout />

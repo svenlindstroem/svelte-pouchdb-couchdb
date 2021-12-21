@@ -2,6 +2,15 @@
   import { onMount } from "svelte";
   import { focusHelper } from "../helper.js";
 
+  import { createEventDispatcher } from "svelte";
+
+  const dispatch = createEventDispatcher();
+
+  function dispatchNewSettings() {
+    dispatch("newSettings", {
+      text: "new settings!",
+    });
+  }
   export let localDb;
   export let settings;
   export let online;
@@ -12,42 +21,26 @@
   // bind input, element will be passed to the focusHelper function
   let input;
 
-  onMount(async () => {
+  /**
+   * check if the new url will work
+   * return boolean
+   */
+  async function newSettingsOk() {
     try {
-      const currentSettings = await localDb.get("_local/user");
-      remoteUrl = currentSettings.remoteDB;
-      // rev = current._rev;
-    } catch (error) {
-      console.log(error);
-    }
-  });
-
-  async function getSettings() {
-    try {
-      const result = await localDb.get("_local/user");
-      return result;
-    } catch (error) {
-      return error;
-    }
-  }
-
-  // http://admin:admin@localhost1:5984/shopping1
-
-  async function settingsUrlOk() {
-    const db = await new PouchDB(remoteUrl, {
-      skip_setup: true,
-    });
-
-    try {
+      const db = await new PouchDB(remoteUrl, {
+        skip_setup: true,
+      });
       const info = await db.info();
       // info.status returns 404:
       // connection succeded, but database not created (see skip_setup)
       // info.db_name returns a string:
       // database already exists
-      if ((info.status && info.status === 404) || info.db_name) {
+      // console.log(info);
+      if ((info && info.status === 404) || info.db_name) {
         return true;
       }
     } catch (error) {
+      console.log("error", error);
       syncError = true;
       return false;
     }
@@ -56,37 +49,42 @@
   async function saveSettings() {
     if (!remoteUrl) return;
 
-    const ok = await settingsUrlOk();
-    console.log(ok);
+    const ok = await newSettingsOk();
 
     if (!ok) return;
 
     const _id = "_local/user";
 
-    const settings = {
+    const newSettings = {
       _id: _id,
       remoteDB: remoteUrl, // bound variable
     };
 
+    // for an update operation a _rev is required
     // get the previous saved setting if any
-    const doc = await getSettings();
-    if (doc && doc._rev) {
-      // for an update operation a _rev is required
-      settings._rev = doc._rev;
+    if (settings) {
+      newSettings._rev = settings._rev;
     }
 
     try {
-      const result = localDb.put(settings);
+      const result = localDb.put(newSettings);
       if (result) {
         document.querySelector("#modal-settings .modal-close").click();
+        // now dispach event to the parent app component to restart sync
+        dispatchNewSettings();
       }
     } catch (error) {
       console.log(error);
     }
   }
 
+  // capture when element gets focus
+  // since we don't use routes, ModalSetting onMount event fires when the app is mounted
+  // so we need to use the focus event to reset field values when this element is opened again
   function focus() {
-    getSettings();
+    if (settings) {
+      remoteUrl = settings.remoteDB;
+    }
     focusHelper(input);
   }
 </script>
