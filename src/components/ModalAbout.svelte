@@ -19,9 +19,9 @@
             These demo apps cover Progressive Web Apps, hybrid mobile apps, native
             mobile apps, and desktop apps. This particular demo app is a
             <strong>Progressive Web App</strong>
-            built using <strong>Vanilla JS and PouchDB</strong>.
+            built using <strong>Svelte and PouchDB</strong>.
             <a
-              href="https://github.com/ibm-watson-data-lab/shopping-list-vanillajs-pouchdb"
+              href="https://github.com/svenlindstroem/svelte-pouchdb-couchdb"
               target="_blank">Get the source code</a
             >.
           </p>
