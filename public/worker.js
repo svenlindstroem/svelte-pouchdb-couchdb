@@ -6,6 +6,9 @@ var CACHE_NAME = "v1";
 var urlstocache = [
   "/",
   "index.html",
+  "manifest.json",
+  "build/bundle.js",
+  "build/bundle.css",
   "favicons/android-chrome-192x192.png",
   "favicons/android-chrome-512x512.png",
   "favicons/apple-touch-icon.png",
@@ -16,7 +19,7 @@ var urlstocache = [
   "favicons/safari-pinned-tab.svg",
   "https://fonts.googleapis.com/icon?family=Material+Icons",
   "https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700",
-  "https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/css/materialize.min.css",
+  "https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css",
   "https://cdn.jsdelivr.net/npm/pouchdb@6.3.4/dist/pouchdb.min.js",
   "https://cdn.jsdelivr.net/npm/pouchdb@6.3.4/dist/pouchdb.find.min.js",
   "shoppinglist.css",
@@ -46,7 +49,11 @@ self.addEventListener("install", function (event) {
 
 // intercept page requests
 self.addEventListener("fetch", function (event) {
-  console.log("fetch", event.request.url);
+  //console.log("fetch", event.request.url);
+  if (event.request.url.includes(":5984")) {
+    // no need to cache request to the database
+    return;
+  }
   event.respondWith(
     caches.open(CACHE_NAME).then(function (cache) {
       // try from network first
