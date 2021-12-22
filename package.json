@@ -1,7 +1,27 @@
 {
-  "name": "svelte-app",
+  "name": "shopping-list-svelte-pouchdb",
   "version": "1.0.0",
-  "private": true,
+  "description": "Offline First shopping list app written with Svelte and PouchDB",
+  "private": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/svenlindstroem/svelte-pouchdb-couchdb.git"
+  },
+  "keywords": [
+    "OffineFirst",
+    "PWA",
+    "Progressive Web App",
+    "Svelte",
+    "JavaScript",
+    "PouchDB",
+    "CouchDB"
+  ],
+  "author": "svenlindstroem",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/svenlindstroem/svelte-pouchdb-couchdb/issues"
+  },
+  "homepage": "https://github.com/svenlindstroem/svelte-pouchdb-couchdb#readme",
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w",
