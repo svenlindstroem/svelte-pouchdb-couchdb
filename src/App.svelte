@@ -46,7 +46,7 @@
       sync.cancel();
       //localDb.removeAllListeners();
       startSync();
-      console.log("resuming sync after offline event", sync);
+      console.log("restarting sync after offline event");
     }
   }
 
