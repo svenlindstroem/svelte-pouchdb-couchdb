@@ -11,16 +11,13 @@
   const localDbName = "shopping-test";
   const localDb = new PouchDB(localDbName);
 
-  // todo:
-  // let enableFoo
-  // <p class:foo="{enableFoo}">foo</p>
-
   // pouchdb debugging
   // PouchDB.debug.enable("*");
   // PouchDB.debug.disable();
   // localDb.on("error", function (err) {debugger;});
 
-  let online; // listen to online / offline event on window
+  let w;
+  let online; // listen to online / offline event through svelte:window
   let lists = []; // lists array
   let items = []; // items array
   let settings; // settings obj
@@ -33,9 +30,9 @@
 
   // listeners
   $: $lastLocalModification, getLists(), getItems();
-  //$: $currentList, listChange();
   $: online, resumeSync();
 
+  // currentList is either the active (current) list object or an empty object
   $: $currentList && !emptyObj($currentList) && getItems();
 
   /**
@@ -44,9 +41,11 @@
   function resumeSync() {
     if (online && sync && sync.canceled) {
       sync.cancel();
-      //localDb.removeAllListeners();
+      localDb.removeAllListeners();
       startSync();
       console.log("restarting sync after offline event");
+    } else {
+      console.log("still syncing");
     }
   }
 
@@ -58,22 +57,22 @@
   async function getSetttings() {
     try {
       settings = await localDb.get("_local/user");
-      if (settings) {
-        startSync();
-      }
     } catch (error) {
       console.log("can't get settings", error);
     }
   }
 
   function startSync() {
+    // check settings
     if (!settings) return;
-
+    // check if online
+    if (!online) return;
+    console.log("starting sync");
     // in order for the on error event to fire, retry needs to be false
     sync = localDb
       .sync(settings.remoteDB, { live: true, retry: false })
       .on("change", (change) => {
-        // console.log("something changed!", change);
+        console.log("something changed!", change);
         pouchDbSyncChangeEvent = true;
         if (change.direction === "pull") {
           getLists();
@@ -82,11 +81,9 @@
       })
       // complete (info) - This event fires when replication is completed or cancelled.
       // In a live replication, only cancelling the replication should trigger this event.
-      /*
-      .on("complete", (info) => {
+      /*.on("complete", (info) => {
         console.log("complete", info);
-      })
-      */
+      })*/
       .on("active", (info) => {
         pouchDbSyncActiveEvent = true;
         console.log("replication resumed.", info);
@@ -116,7 +113,6 @@
         console.error("error, not syncing", error);
       });
   }
-
   /**
    * Get all lists
    */
@@ -154,6 +150,7 @@
    */
 
   async function handleNewSettings() {
+    console.log("ne settings");
     if (sync) sync.cancel();
     await getSetttings();
     startSync();
@@ -169,13 +166,15 @@
   * But we can use the section tag instead of the body tag to wrap the app
   */
 -->
-<section class={online ? "" : "offline"}>
+<section class:offline={!online} bind:clientWidth={w}>
+  <div>{w}</div>
   <!-- banner -->
   <header class="navbar-fixed">
     <nav id="nav" class="primary-color">
       <div class="nav-wrapper">
         <span
-          class="brand-logo left {emptyObj($currentList) ? 'master-view' : ''}"
+          class:master-view={emptyObj($currentList)}
+          class="brand-logo left"
         >
           {#if !emptyObj($currentList)}
             <a href="#!" on:click|preventDefault={() => ($currentList = {})}
@@ -201,17 +200,15 @@
           href="#modal-settings"
           class="waves-effect waves-light modal-trigger right settings"
         >
-          {#if syncError === true}
-            <i class="material-icons secondary-text lighter">error</i>
-          {:else}
-            <i class="material-icons">settings</i>
-          {/if}
+          <i class="material-icons {syncError ? 'secondary-text lighter' : ''}"
+            >{syncError ? "error" : "settings"}</i
+          >
         </a>
       </div>
     </nav>
   </header>
   <!-- content area -->
-  <main class={emptyObj($currentList) ? "" : "detail-view"}>
+  <main class:detail-view={!emptyObj($currentList)}>
     <!-- shopping lists get inserted here -->
     <div id="shopping-lists">
       {#await lists}

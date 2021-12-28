@@ -57,7 +57,7 @@
 </script>
 
 <li id="item" class="card collection-item">
-  <div class="item-view collapsible {isEdit ? 'closed' : 'open'}">
+  <div class:closed={isEdit} class="item-view collapsible">
     <label>
       <input type="checkbox" on:click={check} bind:checked={item.checked} />
       <span>{item.title}</span>
@@ -66,7 +66,7 @@
       ><i class="material-icons">more_vert</i></button
     >
   </div>
-  <div class="item-edit collapsible {isEdit ? 'open' : 'closed'}">
+  <div class:closed={!isEdit} class="item-edit collapsible">
     <form
       id="form-item"
       class="col s12 tertiary lighter"

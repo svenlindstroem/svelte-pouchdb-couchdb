@@ -108,7 +108,7 @@
 </script>
 
 <div class="card collapsible">
-  <div class="list-view collapsible {isEdit ? 'closed' : 'open'}">
+  <div class:closed={isEdit} class="list-view collapsible">
     <div class="card-content" on:click={openList}>
       <span class="card-title activator"
         >{list.title}
@@ -126,7 +126,7 @@
       >
     </div>
   </div>
-  <div class="list-edit collapsible {isEdit ? 'open' : 'closed'}">
+  <div class:closed={!isEdit} class="list-edit collapsible">
     <form class="col s12 white" on:submit|preventDefault={update}>
       <div class="card-content">
         <span class="card-title">
