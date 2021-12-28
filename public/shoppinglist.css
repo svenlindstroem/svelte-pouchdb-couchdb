@@ -38,6 +38,10 @@ h5 {
 */
 
 /* added */
+header {
+  max-width: 100vw;
+}
+
 .item-view span {
   font-size: 25px !important;
   font-weight: 300;
