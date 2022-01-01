@@ -11,6 +11,8 @@
   const localDbName = "shopping-test";
   const localDb = new PouchDB(localDbName);
 
+  // todo: items checked does not update when pulled from db server
+
   // pouchdb debugging
   // PouchDB.debug.enable("*");
   // PouchDB.debug.disable();
@@ -148,9 +150,8 @@
   /**
    * receiveing a dispached message from ModalSettings
    */
-
   async function handleNewSettings() {
-    console.log("ne settings");
+    //console.log("new settings");
     if (sync) sync.cancel();
     await getSetttings();
     startSync();

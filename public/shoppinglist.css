@@ -17,6 +17,7 @@ body[data-list-id] {
 /* added: keep shopping list title in place in master view */
 .brand-logo.master-view {
   left: 3.28rem !important;
+  white-space: nowrap;
 }
 
 h5 {
@@ -39,7 +40,8 @@ h5 {
 
 /* added */
 header {
-  width: 100vw;
+  width: 50vw !important;
+  overflow: hidden;
 }
 
 .item-view span {
@@ -246,9 +248,11 @@ main .card {
   line-height: initial;
 }
 
+/*
 .collection-item input:checked ~ label {
   text-decoration: line-through;
 }
+*/
 
 .collection-item input:checked ~ button {
   visibility: hidden;
