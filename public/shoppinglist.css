@@ -361,6 +361,12 @@ body.shopping-list-about .about-top-sheet {
 }
 */
 
+/* fixing nav width */
+nav,
+.modal {
+  width: 100vw !important;
+}
+
 .settings {
   margin-right: 25px;
 }
