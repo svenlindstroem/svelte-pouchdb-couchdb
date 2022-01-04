@@ -1,4 +1,5 @@
 <script>
+  import { onMount } from "svelte";
   import { currentList, lastLocalModification } from "./store.js";
   import { emptyObj } from "./helper";
   import ModalAbout from "./components/ModalAbout.svelte";
@@ -6,10 +7,11 @@
   import ModalAdd from "./components/ModalAdd.svelte";
   import List from "./components/List.svelte";
   import Item from "./components/Item.svelte";
-  import { onMount } from "svelte";
 
   const localDbName = "shopping-test";
   const localDb = new PouchDB(localDbName);
+
+  onMount(() => {});
 
   // todo: items checked does not update when pulled from db server
 
@@ -18,7 +20,7 @@
   // PouchDB.debug.disable();
   // localDb.on("error", function (err) {debugger;});
 
-  let w;
+  let deviceWidth;
   let online; // listen to online / offline event through svelte:window
   let lists = []; // lists array
   let items = []; // items array
@@ -167,8 +169,7 @@
   * But we can use the section tag instead of the body tag to wrap the app
   */
 -->
-<section class:offline={!online} bind:clientWidth={w}>
-  <div>{w}</div>
+<section class:offline={!online} bind:clientWidth={deviceWidth}>
   <!-- banner -->
   <header class="navbar-fixed">
     <nav id="nav" class="primary-color">
