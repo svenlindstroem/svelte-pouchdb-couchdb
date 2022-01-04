@@ -4,7 +4,40 @@ This repo is a Svelte implementation of SPA PWA [ibm-watson-data-lab/shopping-li
 
 "[Shopping list](https://github.com/ibm-watson-data-lab/shopping-list) is a series of Offline First demo apps, each built using a different stack. This is a JavaScript implementation of the domain model for the Shopping List app. This package may be used in Vanilla JS, Polymer, React, Preact, Vue.js, Ember.js, React Native, Ionic, Cordova, Electron, and any other JavaScript implementation of the Shopping List demo app."
 
----
+To check out the demo click [here](https://shopping-list-svelte-pouchdb.vercel.app/).
+
+# Install app locally
+
+```bash
+nvm use
+npm i
+npm run dev
+```
+
+# Run CouchDB locally
+
+Download Apache CouchDB from [here](https://couchdb.apache.org/#download).
+
+Install and open [http://localhost:5984/\_utils/](http://localhost:5984/_utils/).
+
+Login with username admin and password admin.
+
+Create a new database 'shopping'.
+
+# Foward local db port with ngrok
+
+Download the free ngrok version from here: [https://ngrok.com/](https://ngrok.com/) and install.
+
+´´´bash
+cd ngrok
+./ngrok http 5984
+´´´
+
+Copy and edit the https url. Should look like this: https://username:password@6d39-77-10-152-42.ngrok.io/shopping.
+
+Paste the edited url into settings.
+
+# Svelte starting point
 
 `npx degit sveltejs/template shopping-list-svelte-pouchdb`
 
