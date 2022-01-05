@@ -21,6 +21,7 @@
   // localDb.on("error", function (err) {debugger;});
 
   let deviceWidth;
+  let headerHeight;
   let online; // listen to online / offline event through svelte:window
   let lists = []; // lists array
   let items = []; // items array
@@ -171,7 +172,7 @@
 -->
 <section class:offline={!online} bind:clientWidth={deviceWidth}>
   <!-- banner -->
-  <header class="navbar-fixed">
+  <header class="navbar-fixed" bind:clientHeight={headerHeight}>
     <nav id="nav" class="primary-color">
       <div class="nav-wrapper">
         <span
@@ -210,25 +211,32 @@
     </nav>
   </header>
   <!-- content area -->
-  <main class:detail-view={!emptyObj($currentList)}>
-    <!-- shopping lists get inserted here -->
-    <div id="shopping-lists">
-      {#await lists}
-        ... loading
-      {:then lists}
-        {#each lists as list}
-          <List {list} {localDb} />
-        {/each}
-      {/await}
+  <div class="main" style="--headerHeigth: {headerHeight}px">
+    <div class:master-out={!emptyObj($currentList)} class="master inner">
+      <!-- shopping lists get inserted here -->
+      <div id="shopping-lists">
+        {#await lists}
+          ... loading
+        {:then lists}
+          {#each lists as list}
+            <List {list} {localDb} />
+          {/each}
+        {/await}
+      </div>
     </div>
+    <div class:detail-in={!emptyObj($currentList)} class="detail inner">
+      <ul id="shopping-list-items">
+        <!-- shopping list items get inserted here -->
+        {#each items as item}
+          <Item {localDb} {item} />
+        {/each}
+      </ul>
+    </div>
+  </div>
+  <!--
+  <main class:detail-view={!emptyObj($currentList)} />
+  -->
 
-    <ul id="shopping-list-items">
-      <!-- shopping list items get inserted here -->
-      {#each items as item}
-        <Item {localDb} {item} />
-      {/each}
-    </ul>
-  </main>
   <!-- add more stuff button -->
   <button
     class="fixed-action-btn btn-floating btn-large secondary-color modal-trigger"
@@ -254,4 +262,59 @@
 </section>
 
 <style>
+  /* header {
+    overflow: hidden;
+  } */
+
+  nav .brand-logo {
+    font-size: 2.1rem;
+  }
+  /* added: keep shopping list title in place in master view */
+  .brand-logo.master-view {
+    left: 3.28rem !important;
+    white-space: nowrap;
+  }
+  #shopping-lists,
+  #shopping-list-items {
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+  }
+
+  #shopping-list-items {
+    background-color: #ffffff;
+    border: 0 none;
+    vertical-align: top;
+  }
+  .main {
+    position: relative;
+    width: 100vw;
+    height: calc(100vh - var(--headerHeigth));
+    margin-bottom: 0px;
+    overflow-x: hidden;
+  }
+  .inner {
+    width: 100vw;
+    height: 100%;
+  }
+  .master {
+    position: absolute;
+    left: 0px;
+    transition: left 0.5s linear;
+  }
+
+  .detail {
+    position: absolute;
+    left: calc(100vw + 30px);
+    color: white;
+    transition: left 0.5s linear;
+  }
+
+  /* fly in and out */
+  .master-out {
+    left: -100vw;
+  }
+  .detail-in {
+    left: 0px;
+  }
 </style>

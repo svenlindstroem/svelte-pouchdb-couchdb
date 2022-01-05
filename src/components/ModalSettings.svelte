@@ -130,3 +130,13 @@
     </div>
   </form>
 </div>
+
+<style>
+  .chip {
+    font-weight: 300;
+  }
+  .chip.error {
+    background-color: #c83873;
+    color: #ffffff;
+  }
+</style>

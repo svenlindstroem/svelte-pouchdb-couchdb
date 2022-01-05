@@ -162,3 +162,9 @@
     </form>
   </div>
 </div>
+
+<style>
+  .card {
+    margin: 30px;
+  }
+</style>

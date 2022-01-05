@@ -7,26 +7,17 @@ body {
 body * {
   box-shadow: none !important;
 }
-
-/*
-body[data-list-id] {
-  background-color: #ffffff !important;
-}
-*/
-
-/* added: keep shopping list title in place in master view */
-.brand-logo.master-view {
-  left: 3.28rem !important;
-  white-space: nowrap;
-}
-
+/* checked */
 h5 {
   font-weight: 300;
 }
 
+/* checked */
 .btn-flat {
   color: #7f91a9;
 }
+
+/* checked */
 .btn-flat:hover {
   background-color: rgba(0, 0, 0, 0.1);
 }
@@ -39,10 +30,6 @@ h5 {
 */
 
 /* added */
-header {
-  width: 50vw !important;
-  overflow: hidden;
-}
 
 .item-view span {
   font-size: 25px !important;
@@ -150,36 +137,23 @@ input:focus:not([disabled]):not([readonly]) {
   border-bottom-color: #52647a !important;
 }
 
-/*
-.goback {
-  visibility: hidden;
-}
-
-body[data-list-id] .goback {
-  visibility: initial;
-}
-
-nav .nav-wrapper {
-  padding-left: 10px;
-}
-*/
-
 main {
   /* changed to important */
-  display: flex !important;
+  /* display: flex !important;
   margin: 0 auto 75px auto;
-  width: 200vw;
+  width: 100vw; */
   /* transitions added here */
-  -webkit-transition: all 0.5s linear;
+  /* -webkit-transition: all 0.5s linear;
   -moz-transition: all 0.5s linear;
   -o-transition: all 0.5s linear;
-  transition: all 0.5s linear;
+  transition: all 0.5s linear; */
 }
 
 /* datail view fly in*/
-main.detail-view {
+
+/* main.detail-view {
   transform: translate(-50%);
-}
+} */
 
 /*
 .master-view {
@@ -188,36 +162,20 @@ main.detail-view {
 */
 
 /* no required anymore */
-/*
-main #add-button {
-  position: fixed;
-  bottom: 25px;
-  right: 25px;
-}
-*/
-
-main .card {
+/* main .card {
   margin: 30px;
-}
+} */
 
-#shopping-lists,
+/* #shopping-lists,
 #shopping-list-items {
   display: inline-block;
   flex: 1;
   margin: 0;
   padding: 0;
   min-height: 100vh;
-  /*
   transition-property: transform;
   transition-duration: 0.5s;
-  */
-}
-
-#shopping-list-items {
-  background-color: #ffffff;
-  border: 0 none;
-  vertical-align: top;
-}
+} */
 
 .list-edit .card-action,
 .item-edit .card-action {
@@ -267,7 +225,7 @@ main .card {
   margin: 0;
   max-height: calc(100vh - 65px);
   transition-property: all;
-  transition-duration: 0.55s;
+  transition-duration: 0.5s;
 }
 
 .collapsible.closed {
@@ -387,13 +345,14 @@ nav,
 }
 */
 
+/*
 .chip {
   font-weight: 300;
 }
 .chip.error {
   background-color: #c83873;
   color: #ffffff;
-}
+}*/
 
 body.shopping-list-error-sync nav a.settings.settings-btn,
 body:not(.shopping-list-error-sync) nav a.settings.error-btn {
