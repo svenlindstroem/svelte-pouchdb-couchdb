@@ -11,16 +11,13 @@
   const localDbName = "shopping-test";
   const localDb = new PouchDB(localDbName);
 
-  onMount(() => {});
-
   // todo: items checked does not update when pulled from db server
 
-  // pouchdb debugging
+  // debug pouchdb with the following commands (uncomment as needed and reload):
   // PouchDB.debug.enable("*");
   // PouchDB.debug.disable();
   // localDb.on("error", function (err) {debugger;});
 
-  let deviceWidth;
   let headerHeight;
   let online; // listen to online / offline event through svelte:window
   let lists = []; // lists array
@@ -39,20 +36,6 @@
 
   // currentList is either the active (current) list object or an empty object
   $: $currentList && !emptyObj($currentList) && getItems();
-
-  /**
-   * resume syncing after online changed from false to true;
-   */
-  function resumeSync() {
-    if (online && sync && sync.canceled) {
-      sync.cancel();
-      localDb.removeAllListeners();
-      startSync();
-      console.log("restarting sync after offline event");
-    } else {
-      console.log("still syncing");
-    }
-  }
 
   onMount(async () => {
     await getSetttings();
@@ -74,12 +57,14 @@
     if (!online) return;
     console.log("starting sync");
     // in order for the on error event to fire, retry needs to be false
+    // but true will work as well
     sync = localDb
-      .sync(settings.remoteDB, { live: true, retry: false })
-      .on("change", (change) => {
-        console.log("something changed!", change);
+      .sync(settings.remoteDB, { live: true, retry: true })
+      .on("change", (info) => {
+        // todo: listen to items, when last item on list has been removed and is in currentList, unset currentList
+        console.log("something changed!", info.direction, info.change.docs);
         pouchDbSyncChangeEvent = true;
-        if (change.direction === "pull") {
+        if (info.direction === "pull") {
           getLists();
           getItems();
         }
@@ -118,6 +103,21 @@
         console.error("error, not syncing", error);
       });
   }
+
+  /**
+   * resume syncing after online changed from false to true;
+   */
+  function resumeSync() {
+    if (online && sync && sync.canceled) {
+      sync.cancel();
+      localDb.removeAllListeners();
+      startSync();
+      console.log("restarting sync after offline event");
+    } else {
+      console.log("still syncing");
+    }
+  }
+
   /**
    * Get all lists
    */
@@ -154,7 +154,6 @@
    * receiveing a dispached message from ModalSettings
    */
   async function handleNewSettings() {
-    //console.log("new settings");
     if (sync) sync.cancel();
     await getSetttings();
     startSync();
@@ -170,7 +169,7 @@
   * But we can use the section tag instead of the body tag to wrap the app
   */
 -->
-<section class:offline={!online} bind:clientWidth={deviceWidth}>
+<section class:offline={!online}>
   <!-- banner -->
   <header class="navbar-fixed" bind:clientHeight={headerHeight}>
     <nav id="nav" class="primary-color">
@@ -203,8 +202,10 @@
           href="#modal-settings"
           class="waves-effect waves-light modal-trigger right settings"
         >
-          <i class="material-icons {syncError ? 'secondary-text lighter' : ''}"
-            >{syncError ? "error" : "settings"}</i
+          <i
+            class="material-icons spinthis {syncError
+              ? 'secondary-text lighter'
+              : ''}">{syncError ? "error" : "settings"}</i
           >
         </a>
       </div>
@@ -257,34 +258,33 @@
   <!-- modal: open shopping list about -->
   <ModalAbout />
 
-  <!-- modal: add a shopping list or an item form -->
+  <!-- modal: add a shopping list or an item -->
   <ModalAdd {localDb} />
 </section>
 
 <style>
-  /* header {
-    overflow: hidden;
-  } */
-
   nav .brand-logo {
     font-size: 2.1rem;
   }
-  /* added: keep shopping list title in place in master view */
+  /* keep shopping list title in place in master view */
   .brand-logo.master-view {
     left: 3.28rem !important;
     white-space: nowrap;
+  }
+
+  .settings {
+    margin-right: 25px;
   }
   #shopping-lists,
   #shopping-list-items {
     margin: 0;
     padding: 0;
     width: 100vw;
+    min-height: calc(100vh - var(--headerHeigth));
   }
-
   #shopping-list-items {
     background-color: #ffffff;
     border: 0 none;
-    vertical-align: top;
   }
   .main {
     position: relative;
@@ -316,5 +316,54 @@
   }
   .detail-in {
     left: 0px;
+  }
+
+  section.offline .primary-color,
+  section.offline .secondary-color {
+    background-color: #273a4e !important;
+  }
+
+  section.offline .primary-color *,
+  section.offline .secondary-color * {
+    color: #e1e2e1 !important;
+  }
+
+  .spinthis {
+    display: inline-block;
+    animation-name: spinanimation;
+    animation-duration: 0.5s;
+    animation-timing-function: linear;
+  }
+  @-webkit-keyframes spinanimation {
+    from {
+      -webkit-transform: rotate(0deg);
+    }
+    to {
+      -webkit-transform: rotate(360deg);
+    }
+  }
+  @-moz-keyframes spinanimation {
+    from {
+      -moz-transform: rotate(0deg);
+    }
+    to {
+      -moz-transform: rotate(360deg);
+    }
+  }
+  @-ms-keyframes spinanimation {
+    from {
+      -ms-transform: rotate(0deg);
+    }
+    to {
+      -ms-transform: rotate(360deg);
+    }
+  }
+  @keyframes spinanimation {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
   }
 </style>
