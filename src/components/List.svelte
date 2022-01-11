@@ -11,9 +11,10 @@
   let totalItems = 0;
   let checkedItems = 0;
 
-  // listen to total and checked items to set up checked text
+  // listen to total and checked items to set up complete and checked text
+  $: complete = totalItems === checkedItems && totalItems !== 0 ? true : false;
   $: checkedText =
-    totalItems === 0 ? "O items" : `${checkedItems} of ${totalItems} checked`;
+    totalItems === 0 ? "0 items" : `${checkedItems} of ${totalItems} checked`;
 
   // count total and checked items
   function count() {
@@ -120,10 +121,14 @@
       </span>
     </div>
     <div class="card-action">
-      <input type="checkbox" name="checked" disabled="" />
-      <label for="checked-list-list-2021-10-25T11-53-50-689Z"
-        >{checkedText}</label
-      >
+      {#if complete}
+        <label>
+          <input type="checkbox" checked disabled />
+          <span>{checkedText}</span>
+        </label>
+      {:else}
+        <span>{checkedText}</span>
+      {/if}
     </div>
   </div>
   <div class:closed={!isEdit} class="list-edit collapsible">
