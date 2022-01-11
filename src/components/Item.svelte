@@ -62,9 +62,11 @@
       <input type="checkbox" on:click={check} bind:checked={item.checked} />
       <span>{item.title}</span>
     </label>
-    <button class="btn-flat more-btn right" on:click={toggle}
-      ><i class="material-icons">more_vert</i></button
-    >
+    {#if !item.checked}
+      <button class="btn-flat more-btn right" on:click={toggle}
+        ><i class="material-icons">more_vert</i></button
+      >
+    {/if}
   </div>
   <div class:closed={!isEdit} class="item-edit collapsible">
     <form
@@ -111,3 +113,14 @@
     </form>
   </div>
 </li>
+
+<style>
+  .item-view span {
+    font-size: 25px !important;
+    font-weight: 300;
+    color: #212121;
+  }
+  input:checked ~ span {
+    text-decoration: line-through;
+  }
+</style>
