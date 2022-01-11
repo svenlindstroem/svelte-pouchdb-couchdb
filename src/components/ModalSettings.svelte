@@ -139,4 +139,8 @@
     background-color: #c83873;
     color: #ffffff;
   }
+
+  .input-field {
+    margin-top: 2.2rem;
+  }
 </style>
