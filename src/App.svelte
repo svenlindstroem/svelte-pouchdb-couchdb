@@ -15,6 +15,7 @@
 
   // debug pouchdb with the following commands (uncomment as needed and reload):
   // PouchDB.debug.enable("*");
+  // PouchDB.debug.enable('pouchdb:find');
   // PouchDB.debug.disable();
   // localDb.on("error", function (err) {debugger;});
 
