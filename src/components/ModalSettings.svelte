@@ -3,9 +3,6 @@
 
   import { createEventDispatcher } from "svelte";
 
-  let ngrok =
-    "https://admin:admin@719e-2a02-8109-92c0-3098-7158-12fa-21e-1422.ngrok.io/shopping1";
-
   const dispatch = createEventDispatcher();
 
   function dispatchNewSettings() {
@@ -17,7 +14,7 @@
   export let settings;
   export let online;
 
-  let remoteUrl = ngrok;
+  let remoteUrl;
   let syncError = false;
 
   // bind input, element will be passed to the focusHelper function
