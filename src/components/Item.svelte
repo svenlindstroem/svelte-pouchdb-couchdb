@@ -24,6 +24,7 @@
       const result = await localDb.remove(item._id, item._rev);
       if (result) {
         $lastLocalModification = new Date().toString();
+        toggle();
       }
     } catch (error) {
       console.error(error);
