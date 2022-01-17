@@ -7,7 +7,6 @@
 
   // bind input, element will be passed to the focusHelper function
   let input;
-
   let totalItems = 0;
   let checkedItems = 0;
 
@@ -15,7 +14,8 @@
   $: complete = totalItems === checkedItems && totalItems !== 0 ? true : false;
   $: checkedText =
     totalItems === 0 ? "0 items" : `${checkedItems} of ${totalItems} checked`;
-
+  // when list changes, count again;
+  $: list && count();
   // count total and checked items
   function count() {
     localDb.find(

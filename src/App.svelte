@@ -11,8 +11,6 @@
   const localDbName = "shopping-test";
   const localDb = new PouchDB(localDbName);
 
-  // todo: items checked does not update when pulled from db server
-
   // debug pouchdb with the following commands (uncomment as needed and reload):
   // PouchDB.debug.enable("*");
   // PouchDB.debug.enable('pouchdb:find');
@@ -62,10 +60,27 @@
     sync = localDb
       .sync(settings.remoteDB, { live: true, retry: true })
       .on("change", (info) => {
-        // todo: listen to items, when last item on list has been removed and is in currentList, unset currentList
-        console.log("something changed!", info.direction, info.change.docs);
+        //console.log("something changed!");
         pouchDbSyncChangeEvent = true;
+
         if (info.direction === "pull") {
+          // update $currentList if upstream has changed
+          if (!emptyObj($currentList)) {
+            const found = info.change.docs.find((doc) => {
+              if (doc._id === $currentList._id) {
+                alert(1);
+                $currentList = doc;
+                return true;
+              }
+            });
+
+            // if currentList item has been deleted, unset currentList
+            if (found && found._deleted) {
+              $currentList = {};
+            }
+          }
+
+          // update lists and items
           getLists();
           getItems();
         }
