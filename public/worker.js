@@ -20,6 +20,7 @@ var urlstocache = [
   "https://fonts.googleapis.com/icon?family=Material+Icons",
   "https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700",
   "https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css",
+  "https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js",
   "https://cdn.jsdelivr.net/npm/pouchdb@6.3.4/dist/pouchdb.min.js",
   "https://cdn.jsdelivr.net/npm/pouchdb@6.3.4/dist/pouchdb.find.min.js",
   "shoppinglist.css",
