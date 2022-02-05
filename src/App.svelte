@@ -1,15 +1,20 @@
 <script>
   import { onMount } from "svelte";
+  import Db2 from "./db2.js";
   import { currentList, lastLocalModification } from "./store.js";
-  import { emptyObj } from "./helper";
   import ModalAbout from "./components/ModalAbout.svelte";
   import ModalSettings from "./components/ModalSettings.svelte";
   import ModalAdd from "./components/ModalAdd.svelte";
   import List from "./components/List.svelte";
   import Item from "./components/Item.svelte";
+  import { is_empty } from "svelte/internal";
 
-  const localDbName = "shopping-test";
-  const localDb = new PouchDB(localDbName);
+  const db = new Db2("shopping-test-234");
+  console.log(db);
+
+  const localDb = db.localDb;
+  //const localDbName = "shopping-test";
+  //const localDb = new PouchDB(localDbName);
 
   // debug pouchdb with the following commands (uncomment as needed and reload):
   // PouchDB.debug.enable("*");
@@ -25,105 +30,116 @@
   let sync; // sync obj
   let syncError = false;
 
+  //lists = db.getLists();
+  //items = db.getItems();
+
+  //console.log("getLists", db.getLists());
+
   // https://stackoverflow.com/questions/26892438/how-to-know-when-weve-lost-sync-with-a-remote-couchdb
   let pouchDbSyncActiveEvent = false;
   let pouchDbSyncChangeEvent = false;
 
   // listeners
-  $: $lastLocalModification, getLists(), getItems();
-  $: online, resumeSync();
+  $: $lastLocalModification, refreshData();
+  $: online, db.resumeSync();
+
+  async function refreshData() {
+    lists = await db.getLists();
+    items = await db.getItems();
+    console.log("refreshData", lists, items);
+  }
 
   // currentList is either the active (current) list object or an empty object
-  $: $currentList && !emptyObj($currentList) && getItems();
+  $: $currentList && !is_empty($currentList) && db.getItems();
 
   onMount(async () => {
-    await getSetttings();
-    startSync();
+    await db.getSetttings();
+    db.startSync();
   });
 
-  async function getSetttings() {
+  /* async function getSetttings() {
     try {
       settings = await localDb.get("_local/user");
     } catch (error) {
       console.log("can't get settings", error);
     }
   }
+ */
+  // function startSync() {
+  //   // check settings
+  //   if (!settings) return;
+  //   // check if online
+  //   if (!online) return;
+  //   console.log("starting sync");
+  //   // in order for the on error event to fire, retry needs to be false
+  //   // but true will work as well
+  //   sync = localDb
+  //     .sync(settings.remoteDB, { live: true, retry: true })
+  //     .on("change", (info) => {
+  //       //console.log("something changed!");
+  //       pouchDbSyncChangeEvent = true;
 
-  function startSync() {
-    // check settings
-    if (!settings) return;
-    // check if online
-    if (!online) return;
-    console.log("starting sync");
-    // in order for the on error event to fire, retry needs to be false
-    // but true will work as well
-    sync = localDb
-      .sync(settings.remoteDB, { live: true, retry: true })
-      .on("change", (info) => {
-        //console.log("something changed!");
-        pouchDbSyncChangeEvent = true;
+  //       if (info.direction === "pull") {
+  //         // update $currentList if upstream has changed
+  //         if (!emptyObj($currentList)) {
+  //           const found = info.change.docs.find((doc) => {
+  //             if (doc._id === $currentList._id) {
+  //               alert(1);
+  //               $currentList = doc;
+  //               return true;
+  //             }
+  //           });
 
-        if (info.direction === "pull") {
-          // update $currentList if upstream has changed
-          if (!emptyObj($currentList)) {
-            const found = info.change.docs.find((doc) => {
-              if (doc._id === $currentList._id) {
-                alert(1);
-                $currentList = doc;
-                return true;
-              }
-            });
+  //           // if currentList item has been deleted, unset currentList
+  //           if (found && found._deleted) {
+  //             $currentList = {};
+  //           }
+  //         }
 
-            // if currentList item has been deleted, unset currentList
-            if (found && found._deleted) {
-              $currentList = {};
-            }
-          }
-
-          // update lists and items
-          getLists();
-          getItems();
-        }
-      })
-      // complete (info) - This event fires when replication is completed or cancelled.
-      // In a live replication, only cancelling the replication should trigger this event.
-      /*.on("complete", (info) => {
-        console.log("complete", info);
-      })*/
-      .on("active", (info) => {
-        pouchDbSyncActiveEvent = true;
-        console.log("replication resumed.", info);
-      })
-      // paused (err) - This event fires when the replication is paused,
-      // either because a live replication is waiting for changes, or
-      // replication has temporarily failed, with err, and is attempting to resume.
-      .on("paused", (error) => {
-        // console.log("replication paused.", error);
-        if (pouchDbSyncActiveEvent == true && pouchDbSyncChangeEvent == false) {
-          // Gotcha! Syncing with remote DB not happening!
-          console.error("stoped syncing", error);
-        } else {
-          pouchDbSyncActiveEvent = false;
-          pouchDbSyncChangeEvent = false;
-          syncError = false;
-          // Everything's ok. Syncing with remote DB happening normally.
-        }
-      })
-      .on("denied", (error, result) => {
-        console.log("denied", error, result);
-      })
-      // on error fires only if retry is set to false
-      // ontherwise pouchdb will simply retry
-      .on("error", function (error) {
-        syncError = true;
-        console.error("error, not syncing", error);
-      });
-  }
+  //         // update lists and items
+  //         getLists();
+  //         getItems();
+  //       }
+  //     })
+  //     // complete (info) - This event fires when replication is completed or cancelled.
+  //     // In a live replication, only cancelling the replication should trigger this event.
+  //     /*.on("complete", (info) => {
+  //       console.log("complete", info);
+  //     })*/
+  //     .on("active", (info) => {
+  //       pouchDbSyncActiveEvent = true;
+  //       console.log("replication resumed.", info);
+  //     })
+  //     // paused (err) - This event fires when the replication is paused,
+  //     // either because a live replication is waiting for changes, or
+  //     // replication has temporarily failed, with err, and is attempting to resume.
+  //     .on("paused", (error) => {
+  //       // console.log("replication paused.", error);
+  //       if (pouchDbSyncActiveEvent == true && pouchDbSyncChangeEvent == false) {
+  //         // Gotcha! Syncing with remote DB not happening!
+  //         console.error("stoped syncing", error);
+  //       } else {
+  //         pouchDbSyncActiveEvent = false;
+  //         pouchDbSyncChangeEvent = false;
+  //         syncError = false;
+  //         // Everything's ok. Syncing with remote DB happening normally.
+  //       }
+  //     })
+  //     .on("denied", (error, result) => {
+  //       console.log("denied", error, result);
+  //     })
+  //     // on error fires only if retry is set to false
+  //     // ontherwise pouchdb will simply retry
+  //     .on("error", function (error) {
+  //       syncError = true;
+  //       console.error("error, not syncing", error);
+  //     });
+  // }
 
   /**
    * resume syncing after online changed from false to true;
    */
-  function resumeSync() {
+  /* function resumeSync() {
     if (online && sync && sync.canceled) {
       sync.cancel();
       localDb.removeAllListeners();
@@ -133,12 +149,12 @@
       console.log("still syncing");
     }
   }
-
+ */
   /**
    * Get all lists
    */
-  function getLists() {
-    localDb.find(
+  /*   function getLists() {
+    db.find(
       {
         selector: {
           type: "list",
@@ -149,12 +165,12 @@
       }
     );
   }
-
+ */
   /**
    * get items based on $currenList._id
    */
-  function getItems() {
-    localDb.find(
+  /*   function getItems() {
+    db.find(
       {
         selector: {
           list: $currentList._id,
@@ -164,7 +180,7 @@
         items = response ? response.docs || response : response;
       }
     );
-  }
+  } */
 
   /**
    * receiveing a dispached message from ModalSettings
@@ -175,7 +191,7 @@
     startSync();
   }
 
-  getLists();
+  //db.getLists();
 </script>
 
 <svelte:window bind:online />
@@ -191,17 +207,17 @@
     <nav id="nav" class="primary-color">
       <div class="nav-wrapper">
         <span
-          class:master-view={emptyObj($currentList)}
+          class:master-view={is_empty($currentList)}
           class="brand-logo left"
         >
-          {#if !emptyObj($currentList)}
+          {#if !is_empty($currentList)}
             <a href="#!" on:click|preventDefault={() => ($currentList = {})}
               ><i class="material-icons">arrow_back</i></a
             >
           {/if}
 
           <span id="header-title">
-            {#if !emptyObj($currentList)}
+            {#if !is_empty($currentList)}
               {$currentList.title}
             {:else}
               Shopping Lists
@@ -229,19 +245,19 @@
   </header>
   <!-- content area -->
   <div class="main" style="--headerHeigth: {headerHeight}px">
-    <div class:master-out={!emptyObj($currentList)} class="master inner">
+    <div class:master-out={!is_empty($currentList)} class="master inner">
       <!-- shopping lists get inserted here -->
       <div id="shopping-lists">
         {#await lists}
           ... loading
         {:then lists}
           {#each lists as list}
-            <List {list} {localDb} />
+            <List {list} {db} />
           {/each}
         {/await}
       </div>
     </div>
-    <div class:detail-in={!emptyObj($currentList)} class="detail inner">
+    <div class:detail-in={!is_empty($currentList)} class="detail inner">
       <ul id="shopping-list-items">
         <!-- shopping list items get inserted here -->
         {#each items as item}
@@ -250,9 +266,6 @@
       </ul>
     </div>
   </div>
-  <!--
-  <main class:detail-view={!emptyObj($currentList)} />
-  -->
 
   <!-- add more stuff button -->
   <button
@@ -264,18 +277,13 @@
 
   <!-- modal: add a shopping list settings form -->
 
-  <ModalSettings
-    on:newSettings={handleNewSettings}
-    {localDb}
-    {settings}
-    {online}
-  />
+  <ModalSettings on:newSettings={handleNewSettings} {db} {settings} {online} />
 
   <!-- modal: open shopping list about -->
   <ModalAbout />
 
   <!-- modal: add a shopping list or an item -->
-  <ModalAdd {localDb} />
+  <ModalAdd {db} />
 </section>
 
 <style>

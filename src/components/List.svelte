@@ -3,7 +3,9 @@
   import { focusHelper } from "../helper.js";
 
   export let list;
-  export let localDb;
+  export let db;
+
+  console.log(db);
 
   // bind input, element will be passed to the focusHelper function
   let input;
@@ -16,28 +18,12 @@
     totalItems === 0 ? "0 items" : `${checkedItems} of ${totalItems} checked`;
   // when list changes, count again;
   $: list && count();
+
   // count total and checked items
-  function count() {
-    localDb.find(
-      {
-        selector: {
-          type: "item",
-          list: list._id,
-        },
-      },
-      function (error, response) {
-        if (error) {
-          console.log(error);
-          return;
-        }
-        let docs = response.docs;
-        totalItems = docs.length;
-        checkedItems = docs.reduce(
-          (carry, obj) => (obj.checked ? carry + 1 : carry),
-          0
-        );
-      }
-    );
+  // todo: should use the apache couchdb count function?
+  async function count(id) {
+    const ct = await db.countItems(id);
+    return ({ totalItems, checkedItems } = ct);
   }
 
   // this collapsible component is either in view or edit mode
@@ -63,11 +49,12 @@
     try {
       // 1. remove items
       // 1.1 create index to speed up itemsResult selector
-      const index = await localDb.createIndex({
+      const index = await db.localDb.createIndex({
         index: { fields: ["list"] },
       });
 
-      const itemsResult = await localDb.find({
+      console.log(1, db.localDb);
+      const itemsResult = await db.localDb.find({
         selector: {
           list: list._id,
         },
@@ -83,7 +70,7 @@
       }
 
       // 2. remove list
-      const listResult = await localDb.remove(list._id, list._rev);
+      const listResult = await db.localDb.remove(list._id, list._rev);
       if (listResult) {
         $lastLocalModification = new Date().toString();
         toggle();
@@ -96,7 +83,7 @@
   async function update() {
     if (!isEdit) return;
     try {
-      const result = await localDb.put(list);
+      const result = await db.localDb.put(list);
       $lastLocalModification = new Date().toString();
       toggle();
     } catch (error) {
@@ -104,7 +91,7 @@
     }
   }
 
-  // count again is db is modified
+  // count again when modifications occur
   $: $lastLocalModification, count();
 </script>
 

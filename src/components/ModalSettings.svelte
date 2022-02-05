@@ -10,7 +10,7 @@
       text: "new settings!",
     });
   }
-  export let localDb;
+  export let db;
   export let settings;
   export let online;
 
@@ -66,7 +66,7 @@
     }
 
     try {
-      const result = localDb.put(newSettings);
+      const result = db.put(newSettings);
       if (result) {
         document.querySelector("#modal-settings .modal-close").click();
         // now dispach event to the parent app component to restart sync

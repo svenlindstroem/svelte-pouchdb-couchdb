@@ -1,7 +1,7 @@
 <script>
   import { currentList, lastLocalModification } from "../store.js";
   import { focusHelper } from "../helper.js";
-  export let localDb;
+  export let db;
 
   let title = "";
   let doc;
@@ -46,10 +46,11 @@
 
   // todo: async
   function save(doc) {
-    localDb.put(doc, function (error, result) {
+    db.localDb.put(doc, function (error, result) {
       if (!error) {
         title = "";
         $lastLocalModification = new Date().toString();
+        console.log(result);
         document.querySelector("#modal-add .modal-close").click();
       } else {
         console.log(error);
