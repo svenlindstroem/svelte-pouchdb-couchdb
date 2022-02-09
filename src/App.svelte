@@ -9,12 +9,7 @@
   import Item from "./components/Item.svelte";
   import { is_empty } from "svelte/internal";
 
-  const db = new Db2("shopping-test-234");
-  console.log(db);
-
-  const localDb = db.localDb;
-  //const localDbName = "shopping-test";
-  //const localDb = new PouchDB(localDbName);
+  const db = new Db2("shopping-test-345");
 
   // debug pouchdb with the following commands (uncomment as needed and reload):
   // PouchDB.debug.enable("*");
@@ -30,11 +25,6 @@
   let sync; // sync obj
   let syncError = false;
 
-  //lists = db.getLists();
-  //items = db.getItems();
-
-  //console.log("getLists", db.getLists());
-
   // https://stackoverflow.com/questions/26892438/how-to-know-when-weve-lost-sync-with-a-remote-couchdb
   let pouchDbSyncActiveEvent = false;
   let pouchDbSyncChangeEvent = false;
@@ -46,11 +36,10 @@
   async function refreshData() {
     lists = await db.getLists();
     items = await db.getItems();
-    console.log("refreshData", lists, items);
   }
 
   // currentList is either the active (current) list object or an empty object
-  $: $currentList && !is_empty($currentList) && db.getItems();
+  $: $currentList && !is_empty($currentList) && refreshData();
 
   onMount(async () => {
     await db.getSetttings();
@@ -150,37 +139,6 @@
     }
   }
  */
-  /**
-   * Get all lists
-   */
-  /*   function getLists() {
-    db.find(
-      {
-        selector: {
-          type: "list",
-        },
-      },
-      function (error, response) {
-        lists = response ? response.docs || response : response;
-      }
-    );
-  }
- */
-  /**
-   * get items based on $currenList._id
-   */
-  /*   function getItems() {
-    db.find(
-      {
-        selector: {
-          list: $currentList._id,
-        },
-      },
-      function (error, response) {
-        items = response ? response.docs || response : response;
-      }
-    );
-  } */
 
   /**
    * receiveing a dispached message from ModalSettings
@@ -246,7 +204,7 @@
   <!-- content area -->
   <div class="main" style="--headerHeigth: {headerHeight}px">
     <div class:master-out={!is_empty($currentList)} class="master inner">
-      <!-- shopping lists get inserted here -->
+      <!-- lists view -->
       <div id="shopping-lists">
         {#await lists}
           ... loading
@@ -257,11 +215,12 @@
         {/await}
       </div>
     </div>
+    <!-- items view -->
     <div class:detail-in={!is_empty($currentList)} class="detail inner">
       <ul id="shopping-list-items">
         <!-- shopping list items get inserted here -->
         {#each items as item}
-          <Item {localDb} {item} />
+          <Item {db} {item} />
         {/each}
       </ul>
     </div>

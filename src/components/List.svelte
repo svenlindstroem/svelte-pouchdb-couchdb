@@ -5,8 +5,6 @@
   export let list;
   export let db;
 
-  console.log(db);
-
   // bind input, element will be passed to the focusHelper function
   let input;
   let totalItems = 0;
@@ -21,8 +19,8 @@
 
   // count total and checked items
   // todo: should use the apache couchdb count function?
-  async function count(id) {
-    const ct = await db.countItems(id);
+  async function count() {
+    const ct = await db.countItems(list._id);
     return ({ totalItems, checkedItems } = ct);
   }
 
@@ -44,47 +42,21 @@
     $currentList = list;
   }
 
-  // remove items, then remove list
+  // foward call db method removeList
   async function remove() {
     try {
-      // 1. remove items
-      // 1.1 create index to speed up itemsResult selector
-      const index = await db.localDb.createIndex({
-        index: { fields: ["list"] },
-      });
-
-      console.log(1, db.localDb);
-      const itemsResult = await db.localDb.find({
-        selector: {
-          list: list._id,
-        },
-      });
-
-      // 1.2 mark docs for deletion
-      if (itemsResult.docs.length) {
-        itemsResult.docs.forEach((doc) => {
-          doc._deleted = true;
-        });
-        // 1.3 bulk remove docs
-        const deleteItemsResult = await localDb.bulkDocs(itemsResult.docs);
-      }
-
-      // 2. remove list
-      const listResult = await db.localDb.remove(list._id, list._rev);
-      if (listResult) {
-        $lastLocalModification = new Date().toString();
-        toggle();
-      }
+      await db.removeListOrItem(list);
+      toggle();
     } catch (error) {
-      console.error(error);
+      console.log("could not remove", error);
     }
   }
 
+  // foward call db method updateList
   async function update() {
     if (!isEdit) return;
     try {
-      const result = await db.localDb.put(list);
-      $lastLocalModification = new Date().toString();
+      await db.updateListOrItem(list);
       toggle();
     } catch (error) {
       console.error(error);

@@ -9,7 +9,7 @@
   // bind input, element will be passed to the focusHelper function
   let input;
 
-  function add() {
+  async function add() {
     if ($currentList && $currentList._id) {
       // adding an item
       doc = {
@@ -41,7 +41,14 @@
         updatedAt: "",
       };
     }
-    save(doc);
+
+    try {
+      await db.addListOrItem(doc);
+      title = "";
+      document.querySelector("#modal-add .modal-close").click();
+    } catch (error) {
+      console.error("could not save list or item", error);
+    }
   }
 
   // todo: async

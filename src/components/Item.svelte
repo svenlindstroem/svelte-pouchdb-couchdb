@@ -1,9 +1,10 @@
 <script>
   import { lastLocalModification } from "../store.js";
   import { focusHelper } from "../helper";
+  import { bind } from "svelte/internal";
 
   export let item;
-  export let localDb;
+  export let db;
 
   // this collapsible component is either in view or edit mode
   let isEdit = false;
@@ -21,11 +22,8 @@
 
   async function remove() {
     try {
-      const result = await localDb.remove(item._id, item._rev);
-      if (result) {
-        $lastLocalModification = new Date().toString();
-        toggle();
-      }
+      await db.removeListOrItem(item);
+      toggle();
     } catch (error) {
       console.error(error);
     }
@@ -34,12 +32,13 @@
   // update only checked and updatedAt, do not toggle
   async function check() {
     try {
+      console.log(db.localDb);
       const doc = item;
       doc.checked = this.checked;
       doc.updatedAt = new Date().toISOString();
-      const result = await localDb.put(doc);
-      item = await localDb.get(doc._id);
-      $lastLocalModification = new Date().toString();
+      await db.updateListOrItem(doc);
+      item = await db.getItem(doc._id);
+      console.log(item);
     } catch (error) {
       console.log(error);
     }
@@ -48,8 +47,7 @@
   async function update() {
     try {
       item.updatedAt = new Date().toISOString();
-      const result = await localDb.put(item);
-      $lastLocalModification = new Date().toString();
+      await db.updateListOrItem(item);
       toggle();
     } catch (error) {
       console.error(error);
