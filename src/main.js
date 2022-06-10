@@ -1,6 +1,6 @@
 import App from "./App.svelte";
 
-if ("serviceWorker" in navigator) {
+/* if ("serviceWorker" in navigator) {
   window.addEventListener("load", function () {
     // register service worker
     navigator.serviceWorker.register("worker.js").then(
@@ -15,7 +15,7 @@ if ("serviceWorker" in navigator) {
       }
     );
   });
-}
+} */
 
 const app = new App({
   target: document.body,

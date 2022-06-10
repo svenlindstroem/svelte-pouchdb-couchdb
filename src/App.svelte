@@ -1,7 +1,7 @@
 <script>
   import { onMount } from "svelte";
-  import Db2 from "./db2.js";
-  import { currentList, lastLocalModification } from "./store.js";
+  import Db from "./db.js";
+  import { currentList, lastLocalModification, syncError } from "./store.js";
   import ModalAbout from "./components/ModalAbout.svelte";
   import ModalSettings from "./components/ModalSettings.svelte";
   import ModalAdd from "./components/ModalAdd.svelte";
@@ -9,29 +9,24 @@
   import Item from "./components/Item.svelte";
   import { is_empty } from "svelte/internal";
 
-  const db = new Db2("shopping-test-345");
+  let db = new Db("abc");
 
   // debug pouchdb with the following commands (uncomment as needed and reload):
   // PouchDB.debug.enable("*");
-  // PouchDB.debug.enable('pouchdb:find');
+  // if debug was enabled,and now is commented, we need to call disable once to turn it off
   // PouchDB.debug.disable();
+  // PouchDB.debug.enable('pouchdb:find');
   // localDb.on("error", function (err) {debugger;});
 
-  let headerHeight;
+  let headerHeight; // used in style height: calc(100vh - var(--headerHeigth));
   let online; // listen to online / offline event through svelte:window
   let lists = []; // lists array
   let items = []; // items array
-  let settings; // settings obj
   let sync; // sync obj
-  let syncError = false;
-
-  // https://stackoverflow.com/questions/26892438/how-to-know-when-weve-lost-sync-with-a-remote-couchdb
-  let pouchDbSyncActiveEvent = false;
-  let pouchDbSyncChangeEvent = false;
 
   // listeners
   $: $lastLocalModification, refreshData();
-  $: online, db.resumeSync();
+  $: online, db.resumeSync(online);
 
   async function refreshData() {
     lists = await db.getLists();
@@ -42,114 +37,20 @@
   $: $currentList && !is_empty($currentList) && refreshData();
 
   onMount(async () => {
-    await db.getSetttings();
     db.startSync();
   });
 
-  /* async function getSetttings() {
-    try {
-      settings = await localDb.get("_local/user");
-    } catch (error) {
-      console.log("can't get settings", error);
-    }
-  }
- */
-  // function startSync() {
-  //   // check settings
-  //   if (!settings) return;
-  //   // check if online
-  //   if (!online) return;
-  //   console.log("starting sync");
-  //   // in order for the on error event to fire, retry needs to be false
-  //   // but true will work as well
-  //   sync = localDb
-  //     .sync(settings.remoteDB, { live: true, retry: true })
-  //     .on("change", (info) => {
-  //       //console.log("something changed!");
-  //       pouchDbSyncChangeEvent = true;
-
-  //       if (info.direction === "pull") {
-  //         // update $currentList if upstream has changed
-  //         if (!emptyObj($currentList)) {
-  //           const found = info.change.docs.find((doc) => {
-  //             if (doc._id === $currentList._id) {
-  //               alert(1);
-  //               $currentList = doc;
-  //               return true;
-  //             }
-  //           });
-
-  //           // if currentList item has been deleted, unset currentList
-  //           if (found && found._deleted) {
-  //             $currentList = {};
-  //           }
-  //         }
-
-  //         // update lists and items
-  //         getLists();
-  //         getItems();
-  //       }
-  //     })
-  //     // complete (info) - This event fires when replication is completed or cancelled.
-  //     // In a live replication, only cancelling the replication should trigger this event.
-  //     /*.on("complete", (info) => {
-  //       console.log("complete", info);
-  //     })*/
-  //     .on("active", (info) => {
-  //       pouchDbSyncActiveEvent = true;
-  //       console.log("replication resumed.", info);
-  //     })
-  //     // paused (err) - This event fires when the replication is paused,
-  //     // either because a live replication is waiting for changes, or
-  //     // replication has temporarily failed, with err, and is attempting to resume.
-  //     .on("paused", (error) => {
-  //       // console.log("replication paused.", error);
-  //       if (pouchDbSyncActiveEvent == true && pouchDbSyncChangeEvent == false) {
-  //         // Gotcha! Syncing with remote DB not happening!
-  //         console.error("stoped syncing", error);
-  //       } else {
-  //         pouchDbSyncActiveEvent = false;
-  //         pouchDbSyncChangeEvent = false;
-  //         syncError = false;
-  //         // Everything's ok. Syncing with remote DB happening normally.
-  //       }
-  //     })
-  //     .on("denied", (error, result) => {
-  //       console.log("denied", error, result);
-  //     })
-  //     // on error fires only if retry is set to false
-  //     // ontherwise pouchdb will simply retry
-  //     .on("error", function (error) {
-  //       syncError = true;
-  //       console.error("error, not syncing", error);
-  //     });
-  // }
-
-  /**
-   * resume syncing after online changed from false to true;
-   */
-  /* function resumeSync() {
-    if (online && sync && sync.canceled) {
-      sync.cancel();
-      localDb.removeAllListeners();
-      startSync();
-      console.log("restarting sync after offline event");
-    } else {
-      console.log("still syncing");
-    }
-  }
- */
-
   /**
    * receiveing a dispached message from ModalSettings
+   * when new settings are set
    */
   async function handleNewSettings() {
-    if (sync) sync.cancel();
-    await getSetttings();
-    startSync();
+    console.log("received new settings");
+    db.cancelSync();
+    // create a new innstance of db
+    db = new Db("abc");
+    db.startSync();
   }
-
-  //db.getLists();
 </script>
 
 <svelte:window bind:online />
@@ -162,6 +63,7 @@
 <section class:offline={!online}>
   <!-- banner -->
   <header class="navbar-fixed" bind:clientHeight={headerHeight}>
+    <div>Sync Error: {$syncError}</div>
     <nav id="nav" class="primary-color">
       <div class="nav-wrapper">
         <span
@@ -236,7 +138,7 @@
 
   <!-- modal: add a shopping list settings form -->
 
-  <ModalSettings on:newSettings={handleNewSettings} {db} {settings} {online} />
+  <ModalSettings on:newSettings={handleNewSettings} {db} {online} />
 
   <!-- modal: open shopping list about -->
   <ModalAbout />

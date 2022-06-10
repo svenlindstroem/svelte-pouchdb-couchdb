@@ -62,7 +62,7 @@ export default class Db {
     // but true will work as well
 
     this.sync = this.localDb
-      .sync(this.settings.remoteDB, { live: true, retry: false })
+      .sync(this.settings.remoteDB, { live: true, retry: true })
       .on("change", (info) => {
         console.log("change");
         pouchDbSyncChangeEvent = true;
