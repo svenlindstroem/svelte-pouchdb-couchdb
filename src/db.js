@@ -1,58 +1,88 @@
 import { get } from "svelte/store";
-import { currentList, lastLocalModification } from "./store.js";
+import { currentList, lastLocalModification, syncError } from "./store.js";
 import { is_empty } from "svelte/internal";
 
+// https://stackoverflow.com/questions/26892438/how-to-know-when-weve-lost-sync-with-a-remote-couchdb
+let pouchDbSyncActiveEvent = false;
+let pouchDbSyncChangeEvent = false;
+//let syncError;
+//let sync;
 export default class Db {
-  #localDb;
+  // #localDb;
+  settings = {};
   constructor(localDbName) {
+    console.log("db constructor called");
+
     this.localDbName = localDbName;
     this.localDb = new PouchDB(this.localDbName);
-    this.methods;
+    this.sync;
+    this.getSetttings();
+    /*
+    setTimeout(() => {
+      console.log("settings after timeout", this.settings);
+    }, 1000);
+    console.log(this);
+    */
   }
 
+  /**
+   * get settings from pouchdb _local/user
+   */
   async getSetttings() {
     try {
       this.settings = await this.localDb.get("_local/user");
-      return this;
     } catch (error) {
       console.log("can't get settings", error);
     }
   }
 
-  startSync() {
-    // check settings
-    if (!this.settings) return;
+  cancelSync() {
+    this.sync.cancel();
+  }
+
+  async startSync() {
+    /*
+    var stackTrace = new Error().stack;
+    const trc = stackTrace.split("at ");
+    console.log("caller: ", trc[2]);
+    */
+
     // check if online
-    //if (!online) return;
-    console.log("starting sync");
+    if (!navigator.onLine) return;
+
+    this.localDb.removeAllListeners();
+    await this.getSetttings();
+    if (is_empty(this.settings)) {
+      console.log("no settings found");
+      return;
+    }
+
+    console.log("starting sync with ", this.settings.remoteDB);
     // in order for the on error event to fire, retry needs to be false
     // but true will work as well
-    sync = this.localDb
-      .sync(settings.remoteDB, { live: true, retry: true })
-      .on("change", (info) => {
-        //console.log("something changed!");
-        //pouchDbSyncChangeEvent = true;
 
+    this.sync = this.localDb
+      .sync(this.settings.remoteDB, { live: true, retry: false })
+      .on("change", (info) => {
+        console.log("change");
+        pouchDbSyncChangeEvent = true;
         if (info.direction === "pull") {
-          // update $currentList if upstream has changed
+          lastLocalModification.set(new Date().toString());
+
+          // update $currentList (with setter) if upstream has changed
           if (!is_empty(get(currentList))) {
             const found = info.change.docs.find((doc) => {
               if (doc._id === get(currentList)._id) {
-                alert(1);
                 currentList.set(doc);
                 return true;
               }
             });
 
-            // if currentList item has been deleted, unset currentList
+            // if currentList item has been deleted, unset $currentList (with setter)
             if (found && found._deleted) {
               currentList.set({});
             }
           }
-
-          // update lists and items
-          //this.getLists();
-          //this.getItems();
         }
       })
       // complete (info) - This event fires when replication is completed or cancelled.
@@ -61,6 +91,7 @@ export default class Db {
         console.log("complete", info);
       })*/
       .on("active", (info) => {
+        console.log("active");
         pouchDbSyncActiveEvent = true;
         console.log("replication resumed.", info);
       })
@@ -68,14 +99,19 @@ export default class Db {
       // either because a live replication is waiting for changes, or
       // replication has temporarily failed, with err, and is attempting to resume.
       .on("paused", (error) => {
-        // console.log("replication paused.", error);
+        console.log("paused");
+        if (error) {
+          console.log("replication paused with error.", error);
+          syncError.set(true);
+        }
+
         if (pouchDbSyncActiveEvent == true && pouchDbSyncChangeEvent == false) {
           // Gotcha! Syncing with remote DB not happening!
-          console.error("stoped syncing", error);
+          console.error("stopped syncing", error);
         } else {
           pouchDbSyncActiveEvent = false;
           pouchDbSyncChangeEvent = false;
-          syncError = false;
+          syncError.set(false);
           // Everything's ok. Syncing with remote DB happening normally.
         }
       })
@@ -85,20 +121,22 @@ export default class Db {
       // on error fires only if retry is set to false
       // ontherwise pouchdb will simply retry
       .on("error", function (error) {
-        syncError = true;
+        syncError.set(true);
         console.error("error, not syncing", error);
       });
   }
 
-  resumeSync() {
-    //if (online && sync && this.sync.canceled) {
-    //  sync.cancel();
+  /**
+   * if online resume syncing
+   * @param online boolean
+   */
+  resumeSync(online) {
+    if (!online) return;
+    if (is_empty(this.settings)) return;
+    this.cancelSync();
     this.localDb.removeAllListeners();
     this.startSync();
-    console.log("restarting sync after offline event");
-    //} else {
-    //console.log("still syncing");
-    //}
+    console.log("restarting sync after event");
   }
 
   //async refreshData() {}
@@ -131,21 +169,10 @@ export default class Db {
 
     if (!is_empty(get(currentList))) {
       selector.list = get(currentList)._id;
-      console.log(get(currentList).title);
     }
 
     try {
       const result = await this.localDb.find({ selector });
-      console.log(
-        "getItems result",
-        result,
-        "currentList",
-        get(currentList),
-        "sel",
-        selector,
-        "res",
-        result.docs
-      );
       return result && result.docs ? result.docs : [];
     } catch (error) {
       console.log("can't get items", error);
@@ -256,7 +283,6 @@ export default class Db {
    */
   async handleNewSettings() {
     if (sync) sync.cancel();
-    await getSetttings();
-    startSync();
+    this.startSync();
   }
 }
