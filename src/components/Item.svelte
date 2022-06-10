@@ -32,7 +32,6 @@
   // update only checked and updatedAt, do not toggle
   async function check() {
     try {
-      console.log(db.localDb);
       const doc = item;
       doc.checked = this.checked;
       doc.updatedAt = new Date().toISOString();
