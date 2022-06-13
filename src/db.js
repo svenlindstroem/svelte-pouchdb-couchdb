@@ -1,6 +1,9 @@
 import { get } from "svelte/store";
 import { currentList, lastLocalModification, syncError } from "./store.js";
 import { is_empty } from "svelte/internal";
+import PouchDB from "pouchdb";
+import PouchDBFind from "pouchdb-find";
+PouchDB.plugin(PouchDBFind);
 
 // https://stackoverflow.com/questions/26892438/how-to-know-when-weve-lost-sync-with-a-remote-couchdb
 let pouchDbSyncActiveEvent = false;
@@ -139,14 +142,13 @@ export default class Db {
     console.log("restarting sync after event");
   }
 
-  //async refreshData() {}
-
   /**
    * getLists
    * @returns array
    */
   async getLists() {
     try {
+      console.log(this.localDb);
       const result = await this.localDb.find({
         selector: {
           type: "list",
@@ -278,6 +280,28 @@ export default class Db {
     }
   }
 
+  /**
+   * check id a remote database exists
+   * @param {*} remoteUrl
+   * @returns boolean
+   */
+  async checkNewSettings(remoteUrl) {
+    try {
+      const db = await new PouchDB(remoteUrl, {
+        skip_setup: true, // do not create a db, just check if exists
+      });
+      const info = await db.info();
+      if (info.error) {
+        console.log(info);
+        return false;
+      }
+      // connection succeded, but database not created (see skip_setup)
+      return true;
+    } catch (error) {
+      console.log("error checking settings", error);
+      return false;
+    }
+  }
   /**
    * receiveing a dispached message from ModalSettings
    */

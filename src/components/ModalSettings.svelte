@@ -1,6 +1,5 @@
 <script>
   import { createEventDispatcher } from "svelte";
-  //import { settings } from "./../store.js";
   import { focusHelper } from "../helper.js";
 
   const dispatch = createEventDispatcher();
@@ -9,55 +8,26 @@
   export let online;
 
   let connectionError = false;
-  let input;
-  let settings;
-  let ok = false;
+  let input; // bind input, element will be passed to the focusHelper function
 
   function dispatchNewSettings() {
     dispatch("newSettings", {
       text: "new settings!",
     });
-    //$lastLocalModification = new Date().toString();
-  }
-
-  // bind input, element will be passed to the focusHelper function
-
-  /**
-   * check if the new url will work
-   * return boolean
-   */
-  async function checkNewSettings() {
-    try {
-      const db = await new PouchDB(input.value, {
-        skip_setup: true,
-      });
-      const info = await db.info();
-      // info.status returns 404:
-      // connection succeded, but database not created (see skip_setup)
-      // info.db_name returns a string:
-      // database already exists
-      // console.log(info);
-      if ((info && info.status === 404) || info.db_name) {
-        console.log("new settings will work", ok);
-        return true;
-      }
-    } catch (error) {
-      console.log("error checking settings", error);
-      connectionError = true;
-      return false;
-    }
   }
 
   async function saveSettings() {
-    console.log("saving ", input.value);
     if (input.value === "") return;
-
-    const ok = await checkNewSettings();
-    if (!ok) return;
+    console.log("saving ", input.value);
+    const ok = await db.checkNewSettings(input.value);
+    console.log("check new settings ok?", ok);
+    if (!ok) {
+      connectionError = true;
+      return;
+    }
 
     const _id = "_local/user";
-
-    console.log("cur set", db.settings);
+    // console.log("cur set", db.settings);
 
     const newSettings = {
       _id: _id,
@@ -71,14 +41,12 @@
     }
 
     try {
-      console.log("new settings", newSettings);
-
+      // console.log("new settings", newSettings);
       const result = await db.localDb.put(newSettings);
       console.log("newSettings, result", newSettings, result);
 
       if (result) {
-        console.log("ok", result);
-        settings = result;
+        console.log("new settings applied", result);
         document.querySelector("#modal-settings .modal-close").click();
         // now dispach event to the parent app component to restart sync
         dispatchNewSettings();
