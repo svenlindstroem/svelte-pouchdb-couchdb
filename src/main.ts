@@ -1,5 +1,4 @@
 import App from "./App.svelte";
-console.log(1);
 
 /* if ("serviceWorker" in navigator) {
   window.addEventListener("load", function () {
