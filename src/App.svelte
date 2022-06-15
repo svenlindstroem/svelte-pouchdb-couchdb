@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { onMount } from "svelte";
   import Db from "./db.js";
   import { currentList, lastLocalModification, syncError } from "./store.js";
@@ -22,7 +22,7 @@
   let online; // listen to online / offline event through svelte:window
   let lists = []; // lists array
   let items = []; // items array
-  let sync; // sync obj
+  // let sync; // sync obj
 
   // listeners
   $: $lastLocalModification, refreshData();
