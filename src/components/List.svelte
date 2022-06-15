@@ -1,12 +1,12 @@
-<script>
+<script lang="ts">
   import { currentList, lastLocalModification } from "../store.js";
   import { focusHelper } from "../helper.js";
 
-  export let list;
-  export let db;
+  export let list: any;
+  export let db: any;
 
   // bind input, element will be passed to the focusHelper function
-  let input;
+  let input: HTMLInputElement;
   let totalItems = 0;
   let checkedItems = 0;
 
@@ -19,16 +19,16 @@
 
   // count total and checked items
   // todo: should use the apache couchdb count function?
-  async function count() {
+  async function count(): Promise<any> {
     const ct = await db.countItems(list._id);
     return ({ totalItems, checkedItems } = ct);
   }
 
   // this collapsible component is either in view or edit mode
-  let isEdit = false;
+  let isEdit: boolean = false;
 
   // toggle between view and edit mode
-  function toggle() {
+  function toggle(): void {
     isEdit = !isEdit;
     if (isEdit) {
       focusHelper(input);
@@ -38,12 +38,12 @@
   // set the current list object
   // App listens to store change
   // when $currentList is set triggering a change from master-vie to detail-view
-  function openList() {
+  function openList(): void {
     $currentList = list;
   }
 
   // foward call db method removeList
-  async function remove() {
+  async function remove(): Promise<void> {
     try {
       await db.removeListOrItem(list);
       toggle();
@@ -53,7 +53,7 @@
   }
 
   // foward call db method updateList
-  async function update() {
+  async function update(): Promise<void> {
     if (!isEdit) return;
     try {
       await db.updateListOrItem(list);
@@ -112,7 +112,7 @@
               bind:value={list.title}
               bind:this={input}
               placeholder="Your shopping list name"
-              required="true"
+              required
             />
           </div>
         </div>

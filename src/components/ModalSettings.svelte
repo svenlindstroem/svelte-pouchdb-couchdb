@@ -1,22 +1,28 @@
-<script>
+<script lang="ts">
   import { createEventDispatcher } from "svelte";
   import { focusHelper } from "../helper.js";
 
   const dispatch = createEventDispatcher();
 
-  export let db;
-  export let online;
+  export let db: any;
+  export let online: boolean;
 
-  let connectionError = false;
-  let input; // bind input, element will be passed to the focusHelper function
+  let connectionError: boolean = false;
+  let input: HTMLInputElement; // bind input, element will be passed to the focusHelper function
 
-  function dispatchNewSettings() {
+  function dispatchNewSettings(): void {
     dispatch("newSettings", {
       text: "new settings!",
     });
   }
 
-  async function saveSettings() {
+  interface NewSettings {
+    _id: string;
+    remoteDB: string;
+    _rev?: string;
+  }
+
+  async function saveSettings(): Promise<void> {
     if (input.value === "") return;
     console.log("saving ", input.value);
     const ok = await db.checkNewSettings(input.value);
@@ -29,7 +35,7 @@
     const _id = "_local/user";
     // console.log("cur set", db.settings);
 
-    const newSettings = {
+    const newSettings: NewSettings = {
       _id: _id,
       remoteDB: input.value, // bound variable
     };
@@ -47,7 +53,9 @@
 
       if (result) {
         console.log("new settings applied", result);
-        document.querySelector("#modal-settings .modal-close").click();
+        const el = document.querySelector("#modal-settings .modal-close");
+        if (el instanceof HTMLElement) el.click();
+        //document.querySelector("#modal-settings .modal-close").click();
         // now dispach event to the parent app component to restart sync
         dispatchNewSettings();
       }
@@ -59,12 +67,20 @@
   // capture when element gets focus
   // since we don't use routes, ModalSetting onMount event fires when the app is mounted
   // so we need to use the focus event to reset field values when this element is opened again
-  let remoteUrl;
-  function focus() {
+  let remoteUrl: string;
+  function focus(): void {
     if (db.settings && db.settings.remoteDB) {
       remoteUrl = db.settings.remoteDB;
     }
     focusHelper(input);
+  }
+
+  function setRemoteDBUrl() {
+    const newdb = document.querySelector("#newdb");
+    const target: HTMLInputElement = document.querySelector(
+      'input[name="remoteDB"]'
+    );
+    target.value = newdb.textContent;
   }
 </script>
 
@@ -80,14 +96,7 @@
   >
     <div class="modal-content">
       <h5>Shopping Lists Settings</h5>
-      <div
-        class="row"
-        id="newdb"
-        on:click={(event) => {
-          document.querySelector('input[name="remoteDB"]').value =
-            event.target.textContent;
-        }}
-      >
+      <div class="row" id="newdb" on:click={setRemoteDBUrl}>
         http://admin:admin@localhost:5984/shopping1
       </div>
       <div class="row">

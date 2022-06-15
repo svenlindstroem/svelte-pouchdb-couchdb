@@ -1,13 +1,13 @@
-<script>
+<script lang="ts">
   import { currentList, lastLocalModification } from "../store.js";
   import { focusHelper } from "../helper.js";
-  export let db;
+  export let db: any;
 
   let title = "";
-  let doc;
+  let doc: any;
 
   // bind input, element will be passed to the focusHelper function
-  let input;
+  let input: HTMLInputElement;
 
   async function add() {
     if ($currentList && $currentList._id) {
@@ -45,7 +45,9 @@
     try {
       await db.addListOrItem(doc);
       title = "";
-      document.querySelector("#modal-add .modal-close").click();
+      const el = document.querySelector("#modal-add .modal-close");
+      if (el instanceof HTMLElement) el.click();
+      //document.querySelector("#modal-add .modal-close").click();
     } catch (error) {
       console.error("could not save list or item", error);
     }
@@ -58,7 +60,8 @@
         title = "";
         $lastLocalModification = new Date().toString();
         console.log(result);
-        document.querySelector("#modal-add .modal-close").click();
+        const el = document.querySelector("#modal-add .modal-close");
+        if (el instanceof HTMLElement) el.click();
       } else {
         console.log(error);
       }

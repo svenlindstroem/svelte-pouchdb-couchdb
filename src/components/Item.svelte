@@ -1,26 +1,24 @@
-<script>
-  import { lastLocalModification } from "../store.js";
-  import { focusHelper } from "../helper";
-  import { bind } from "svelte/internal";
+<script lang="ts">
+  import { focusHelper } from "../helper.js";
 
-  export let item;
-  export let db;
+  export let item: any;
+  export let db: any;
 
   // this collapsible component is either in view or edit mode
   let isEdit = false;
 
   // bind input, element will be passed to the focusHelper function
-  let input;
+  let input: HTMLInputElement;
 
   // toggle between view and edit mode
-  function toggle() {
+  function toggle(): void {
     isEdit = !isEdit;
     if (isEdit) {
       focusHelper(input);
     }
   }
 
-  async function remove() {
+  async function remove(): Promise<void> {
     try {
       await db.removeListOrItem(item);
       toggle();
@@ -30,7 +28,7 @@
   }
 
   // update only checked and updatedAt, do not toggle
-  async function check() {
+  async function check(): Promise<void> {
     try {
       const doc = item;
       doc.checked = this.checked;
@@ -43,7 +41,7 @@
     }
   }
 
-  async function update() {
+  async function update(): Promise<void> {
     try {
       item.updatedAt = new Date().toISOString();
       await db.updateListOrItem(item);
@@ -91,7 +89,7 @@
               class="validate"
               placeholder="item name"
               aria-hidden="true"
-              required=""
+              required
               bind:this={input}
               bind:value={item.title}
             />
