@@ -21,7 +21,4 @@ const app = new App({
   target: document.body,
 });
 
-// initialize all Materialize plugins
-M.AutoInit();
-
 export default app;
