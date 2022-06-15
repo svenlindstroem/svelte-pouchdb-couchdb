@@ -18,8 +18,8 @@
   // PouchDB.debug.enable('pouchdb:find');
   // localDb.on("error", function (err) {debugger;});
 
-  let headerHeight; // used in style height: calc(100vh - var(--headerHeigth));
-  let online; // listen to online / offline event through svelte:window
+  let headerHeight: number; // used in style height: calc(100vh - var(--headerHeigth));
+  let online: boolean; // listen to online / offline event through svelte:window
   let lists = []; // lists array
   let items = []; // items array
   // let sync; // sync obj
@@ -28,7 +28,7 @@
   $: $lastLocalModification, refreshData();
   $: online, db.resumeSync(online);
 
-  async function refreshData() {
+  async function refreshData(): Promise<void> {
     lists = await db.getLists();
     items = await db.getItems();
   }
@@ -39,12 +39,11 @@
   onMount(async () => {
     db.startSync();
   });
-
   /**
    * receiveing a dispached message from ModalSettings
    * when new settings are set
    */
-  async function handleNewSettings() {
+  async function handleNewSettings(): Promise<void> {
     console.log("received new settings");
     db.cancelSync();
     // create a new innstance of db
