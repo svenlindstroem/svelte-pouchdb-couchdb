@@ -3,8 +3,8 @@
   import { focusHelper } from "../helper.js";
   export let db: any;
 
-  let title = "";
-  let doc: any;
+  let title: string = "";
+  let doc: Doc;
 
   // bind input, element will be passed to the focusHelper function
   let input: HTMLInputElement;
@@ -21,6 +21,7 @@
         checked: false,
         createdAt: new Date().toISOString(),
         updatedAt: "",
+        _rev: "",
       };
     } else {
       // adding a list
@@ -39,34 +40,40 @@
         },
         createdAt: new Date().toISOString(),
         updatedAt: "",
+        _rev: "",
       };
     }
 
     try {
       await db.addListOrItem(doc);
       title = "";
-      const el = document.querySelector("#modal-add .modal-close");
-      if (el instanceof HTMLElement) el.click();
-      //document.querySelector("#modal-add .modal-close").click();
+      // assert el as HTMLInputElement
+      const el = document.querySelector(
+        "#modal-add .modal-close"
+      ) as HTMLInputElement;
+      el.click();
     } catch (error) {
       console.error("could not save list or item", error);
     }
   }
 
   // todo: async
-  function save(doc) {
+  /* function save(doc) {
     db.localDb.put(doc, function (error, result) {
       if (!error) {
         title = "";
         $lastLocalModification = new Date().toString();
         console.log(result);
-        const el = document.querySelector("#modal-add .modal-close");
-        if (el instanceof HTMLElement) el.click();
+        // assert el as HTMLInputElement
+        const el = document.querySelector(
+          "#modal-add .modal-close"
+        ) as HTMLInputElement;
+        el.click();
       } else {
         console.log(error);
       }
     });
-  }
+  }*/
 </script>
 
 <div

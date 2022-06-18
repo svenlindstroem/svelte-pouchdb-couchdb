@@ -1,13 +1,17 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onMount, is_empty } from "svelte/internal";
   import Db from "./db.js";
-  import { currentList, lastLocalModification, syncError } from "./store.js";
+  import {
+    currentList,
+    lastLocalModification,
+    syncError,
+    connectionError,
+  } from "./store.js";
   import ModalAbout from "./components/ModalAbout.svelte";
   import ModalSettings from "./components/ModalSettings.svelte";
   import ModalAdd from "./components/ModalAdd.svelte";
   import List from "./components/List.svelte";
   import Item from "./components/Item.svelte";
-  import { is_empty } from "svelte/internal";
 
   let db = new Db("abc");
 
@@ -19,7 +23,7 @@
   // localDb.on("error", function (err) {debugger;});
 
   let headerHeight: number; // used in style height: calc(100vh - var(--headerHeigth));
-  let online: boolean; // listen to online / offline event through svelte:window
+  let online: boolean | undefined; // listen to online / offline event through svelte:window
   let lists = []; // lists array
   let items = []; // items array
   // let sync; // sync obj
@@ -37,6 +41,7 @@
   $: $currentList && !is_empty($currentList) && refreshData();
 
   onMount(async () => {
+    console.log("App mounted", online);
     db.startSync();
   });
   /**
@@ -63,6 +68,7 @@
   <!-- banner -->
   <header class="navbar-fixed" bind:clientHeight={headerHeight}>
     <div>Sync Error: {$syncError}</div>
+    <div>Connection Error: {$connectionError}</div>
     <nav id="nav" class="primary-color">
       <div class="nav-wrapper">
         <span
