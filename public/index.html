@@ -69,13 +69,10 @@
     <title>Shopping List | Svelte | PouchDB | CouchDB</title>
 
     <script>
-      // fix exports is not defined error
-      var exports = {};
+      var exports = {}; // fix exports is not defined error
       window.addEventListener("DOMContentLoaded", (event) => {
-        M.AutoInit();
+        M.AutoInit(); // initialize all Materialize plugins
       });
-
-      // initialize all Materialize plugins
     </script>
 
     <script defer src="/build/bundle.js"></script>
