@@ -18,32 +18,9 @@ interface Settings {
 
 type Selector = {type: 'item' | 'item', list?: any}
 
-interface DbInstance {
-  localDbName: string,
-  localDb: PouchDB.Database,
-  sync: object,
-  getSettings: () => void,
-  cancelSync(): void,
-  startSync(): void,
-  resumeSync(online: boolean | undefined): void,
-  getLists(): void,
-  getItems(): void,
-  getItem(id: string): Promise<PouchDB.Core.IdMeta & PouchDB.Core.GetMeta>,
-  countItems(id: any): Promise<{ totalItems: number; checkedItems: number; }>,
-  addListOrItem(doc: Doc): Promise<void>,
-  updateListOrItem: (doc: Doc) => Promise<void>,
-  removeListOrItem(doc: Doc): Promise<void>,
-  checkNewSettings(remoteUrl: string): Promise<boolean>,
-  test: (a: string) => void,
-} 
-
 // https://stackoverflow.com/questions/26892438/how-to-know-when-weve-lost-sync-with-a-remote-couchdb
 let pouchDbSyncActiveEvent: boolean = false;
 let pouchDbSyncChangeEvent: boolean = false;
-
-interface Sync {
-  cancel(): any,
-}
 
 export default class Db {
   settings: Settings = {};
@@ -190,11 +167,10 @@ export default class Db {
    */
   async getLists(): Promise<PouchDB.Core.ExistingDocument<{}>[]> {
     try {
-      const result = await this.localDb.find({
-        selector: {
-          type: "list",
-        },
-      });
+      const selector: Selector = {
+        type: "item", 
+      };
+      const result = await this.localDb.find({selector});
       return result && result.docs ? result.docs : [];
     } catch (error) {
       console.log("can't get lists", error);
@@ -228,7 +204,7 @@ export default class Db {
    * @param {*} id item._id
    * @returns obj item
    */
-  async getItem(id: string): Promise<Doc> {
+  async getItem(id: string): Promise<PouchDB.Core.ExistingDocument<{}>> {
     try {
       return await this.localDb.get(id);
     } catch (error) {
@@ -262,7 +238,7 @@ export default class Db {
    *
    * @param {*} doc list or item doc
    */
-  async addListOrItem(doc) {
+  async addListOrItem(doc: Doc): Promise<void> {
     try {
       await this.localDb.put(doc);
       lastLocalModification.set(new Date().toString());
@@ -275,7 +251,7 @@ export default class Db {
    *
    * @param {*} doc list or item doc
    */
-  async updateListOrItem(doc) {
+  async updateListOrItem(doc: Doc): Promise<void> {
     console.log("doc", doc);
     try {
       await this.localDb.put(doc);
@@ -324,10 +300,10 @@ export default class Db {
 
   /**
    * check id a remote database exists
-   * @param {*} remoteUrl
+   * @param {*} remoteUrl string
    * @returns boolean
    */
-  async checkNewSettings(remoteUrl) {
+  async checkNewSettings(remoteUrl: string): Promise<boolean> {
     try {
       const db = await new PouchDB(remoteUrl, {
         skip_setup: true, // do not create a db, just check if exists
