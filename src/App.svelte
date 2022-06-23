@@ -4,8 +4,9 @@
   import {
     currentList,
     lastLocalModification,
-    syncError,
-    connectionError,
+    errorSyncStatus,
+    //errorRemoteDbSettings,
+    //errorRemoteReachable,
   } from "./store.js";
   import ModalAbout from "./components/ModalAbout.svelte";
   import ModalSettings from "./components/ModalSettings.svelte";
@@ -41,7 +42,6 @@
   $: $currentList && !is_empty($currentList) && refreshData();
 
   onMount(async () => {
-    console.log("App mounted", online);
     db.startSync();
   });
   /**
@@ -67,8 +67,11 @@
 <section class:offline={!online}>
   <!-- banner -->
   <header class="navbar-fixed" bind:clientHeight={headerHeight}>
-    <div>Sync Error: {$syncError}</div>
-    <div>Connection Error: {$connectionError}</div>
+    <!-- 
+    <div>Sync Error: {$errorSyncStatus}</div>
+    <div>Db Settings: {$errorRemoteDbSettings}</div>
+    <div>Remote Reachable: {$errorRemoteReachable}</div>
+    -->
     <nav id="nav" class="primary-color">
       <div class="nav-wrapper">
         <span
@@ -100,9 +103,9 @@
           class="waves-effect waves-light modal-trigger right settings"
         >
           <i
-            class="material-icons spinthis {syncError
+            class="material-icons spinthis {$errorSyncStatus
               ? 'secondary-text lighter'
-              : ''}">{syncError ? "error" : "settings"}</i
+              : ''}">{$errorSyncStatus ? "error" : "settings"}</i
           >
         </a>
       </div>

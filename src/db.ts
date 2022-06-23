@@ -2,8 +2,9 @@ import { get } from "svelte/store";
 import {
   currentList,
   lastLocalModification,
-  syncError,
-  connectionError,
+  errorSyncStatus,
+  errorRemoteDbSettings,
+  // errorRemoteReachable,
 } from "./store.js";
 import { is_empty } from "svelte/internal";
 import PouchDB from "pouchdb";
@@ -18,15 +19,15 @@ interface Settings {
 
 type Selector = {type: 'item' | 'item', list?: any}
 
-// https://stackoverflow.com/questions/26892438/how-to-know-when-weve-lost-sync-with-a-remote-couchdb
-let pouchDbSyncActiveEvent: boolean = false;
-let pouchDbSyncChangeEvent: boolean = false;
-
 export default class Db {
   settings: Settings = {};
   localDbName: string;
   localDb: PouchDB.Database;
   sync: PouchDB.Replication.Sync<{}>;
+  
+  // https://stackoverflow.com/questions/26892438/how-to-know-when-weve-lost-sync-with-a-remote-couchdb
+  pouchDbSyncActiveEvent: boolean = false;
+  pouchDbSyncChangeEvent: boolean = false;
 
   constructor(localDbName: string) {
     this.localDbName = localDbName;
@@ -40,9 +41,9 @@ export default class Db {
   async getSettings() {
     try {
       this.settings = await this.localDb.get("_local/user");
-      console.log('settings', this.settings);
-      
+      errorRemoteDbSettings.set(false);
     } catch (error) {
+      errorRemoteDbSettings.set(true);
       console.log("can't get settings", error);
     }
   }
@@ -62,28 +63,24 @@ export default class Db {
 
     // check if online
     if (!navigator.onLine) return;
-    console.log('start', navigator.onLine)
-
     this.localDb.removeAllListeners();
     await this.getSettings();
     if (is_empty(this.settings)) {
       console.log("no settings found");
+      errorRemoteDbSettings.set(true);
       return;
     }
+    errorRemoteDbSettings.set(false);
 
-    console.log("starting sync with ", this.settings.remoteDB);
     // in order for the on error event to fire, retry needs to be false
     // but true will work as well
-
     this.sync = this.localDb
       .sync(this.settings.remoteDB, { live: true, retry: true })
       .on("change", (info) => {
-        console.log("change");
-        pouchDbSyncChangeEvent = true;
+        this.pouchDbSyncChangeEvent = true;
         if (info.direction === "pull") {
           lastLocalModification.set(new Date().toString());
 
-          //type test = PouchDB.Core.ExistingDocument<{}> & {_deleted: boolean};
           // update $currentList (with setter) if upstream has changed
           if (!is_empty(get(currentList))) {
             // assert found as any
@@ -95,8 +92,6 @@ export default class Db {
             }) as Doc;
 
             // if currentList item has been deleted, unset $currentList (with setter)
-            console.log('found', found, found._deleted);
-            
             if (found && found._deleted) {
               currentList.set({});
             }
@@ -106,32 +101,29 @@ export default class Db {
       // complete (info) - This event fires when replication is completed or cancelled.
       // In a live replication, only cancelling the replication should trigger this event.
       .on("complete", (info: PouchDB.Replication.SyncResultComplete<{}>) => {
-        console.log("complete", info);
+        //console.log("complete", info);
       })
       .on("active", () => {
-        console.log("active");
-        pouchDbSyncActiveEvent = true;
+        this.pouchDbSyncActiveEvent = true;
         console.log("replication resumed.");
       })
       // paused (err) - This event fires when the replication is paused,
       // either because a live replication is waiting for changes, or
       // replication has temporarily failed, with err, and is attempting to resume.
       .on("paused", (error) => {
-        console.log("paused");
         if (error) {
           console.log("replication paused with error.", error);
-          syncError.set(true);
+          errorSyncStatus.set(true);
         }
 
-        if (pouchDbSyncActiveEvent == true && pouchDbSyncChangeEvent == false) {
+        if (this.pouchDbSyncActiveEvent == true && this.pouchDbSyncChangeEvent == false) {
           // Gotcha! Syncing with remote DB not happening!
           console.error("stopped syncing", error);
-          connectionError.set(true);
+          errorSyncStatus.set(true);
         } else {
-          pouchDbSyncActiveEvent = false;
-          pouchDbSyncChangeEvent = false;
-          connectionError.set(false);
-          syncError.set(false);
+          this.pouchDbSyncActiveEvent = false;
+          this.pouchDbSyncChangeEvent = false;
+          errorSyncStatus.set(false);
           // Everything's ok. Syncing with remote DB happening normally.
         }
       })
@@ -141,7 +133,7 @@ export default class Db {
       // on error fires only if retry is set to false
       // ontherwise pouchdb will simply retry
       .on("error", function (error) {
-        syncError.set(true);
+        errorSyncStatus.set(true);
         console.error("error, not syncing", error);
       });
   }
@@ -151,8 +143,6 @@ export default class Db {
    * @param online boolean
    */
   resumeSync(online: boolean | undefined): void {
-    console.log('resumeSync', online);
-    
     if (!online) return;
     if (is_empty(this.settings)) return;
     this.cancelSync();
@@ -204,7 +194,7 @@ export default class Db {
    * @param {*} id item._id
    * @returns obj item
    */
-  async getItem(id: string): Promise<PouchDB.Core.ExistingDocument<{}>> {
+  async getItem(id: string): Promise<Doc> {
     try {
       return await this.localDb.get(id);
     } catch (error) {
@@ -252,7 +242,6 @@ export default class Db {
    * @param {*} doc list or item doc
    */
   async updateListOrItem(doc: Doc): Promise<void> {
-    console.log("doc", doc);
     try {
       await this.localDb.put(doc);
       lastLocalModification.set(new Date().toString());
@@ -305,30 +294,20 @@ export default class Db {
    */
   async checkNewSettings(remoteUrl: string): Promise<boolean> {
     try {
-      const db = await new PouchDB(remoteUrl, {
+      const db: PouchDB.Database = await new PouchDB(remoteUrl, {
         skip_setup: true, // do not create a db, just check if exists
       });
-      const info: any = await db.info();
+      const info: DbInfo = await db.info();
       if (info.error) {
-        console.log(info);
-        connectionError.set(true);
+        errorRemoteDbSettings.set(true);
         return false;
       }
       // connection succeded, but database not created (see skip_setup)
-      connectionError.set(false);
+      errorRemoteDbSettings.set(false);
       return true;
     } catch (error) {
       console.log("error checking settings", error);
       return false;
     }
   }
-  /**
-   * receiveing a dispached message from ModalSettings
-   */
-  /*
-  async handleNewSettings() {
-    if (sync) sync.cancel();
-    this.startSync();
-  }
-  */
 }

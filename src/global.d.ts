@@ -14,7 +14,12 @@ declare global {
     title?: string
   }
 
-  interface Doc {
+  type DbConnection = {'remote': boolean, 'reachable': boolean, 'syncing': false};
+
+  interface DbInfo extends PouchDB.Core.DatabaseInfo {
+    error?: any
+  }
+  interface Doc extends PouchDB.Core.ExistingDocument {
     _id: string,
     type: "list" | "item",
     list?: string,
